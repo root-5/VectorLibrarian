@@ -11,14 +11,13 @@ import (
 
 func main() {
 	targetDomain := "www.city.hamura.tokyo.jp"
-	// targetDomain := "nextjs-root-5.vercel.app"
 
 	// デフォルトのコレクターを作成
 	c := colly.NewCollector(
 		colly.AllowedDomains(targetDomain), // 許可するドメインを設定
 		colly.MaxDepth(2),                  // 最大深度を 2 に設定
 		colly.CacheDir("./cache"),          // キャッシュディレクトリを指定
-		colly.Async(true),                  // 非同期モードを有効にする
+		// colly.Async(true),                  // 非同期モードを有効にする
 		// colly.IgnoreRobotsTxt(),            // robots.txt を無視
 	)
 
@@ -33,34 +32,30 @@ func main() {
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("")
 		fmt.Println("")
-		fmt.Println(">> ページURL: ", r.URL.String())
+		fmt.Println(">> URL: ", r.URL.String())
 	})
 
 	// テキストコンテンツを抽出するためのコールバック
 	c.OnHTML("html", func(e *colly.HTMLElement) {
-		// ページのタイトルを表示
-		pageTitle := e.ChildText("title")
-		if pageTitle == "" {
-			pageTitle = "--"
-		}
-		fmt.Println(">> タイトル:", pageTitle)
+		// // ページのタイトルを表示
+		// pageTitle := e.ChildText("title")
+		// if pageTitle == "" {
+		// 	pageTitle = "--"
+		// }
+		// fmt.Println(">> title:", pageTitle)
 
-		// ディスクリプションを表示
-		description := e.ChildAttr("meta[name=description]", "content")
-		if description == "" {
-			description = "--"
-		}
-		fmt.Println(">> ディスクリプション:", description)
+		// // ディスクリプションを表示
+		// description := e.ChildAttr("meta[name=description]", "content")
+		// if description == "" {
+		// 	description = "--"
+		// }
+		// fmt.Println(">> description:", description)
 
 		// head, header, footer, script タグを削除（ルートのみ header, footer は残す）
 		if e.Request.URL.Path != "/" {
 			e.DOM.Find("header").Remove()
 			e.DOM.Find("footer").Remove()
 		}
-		e.DOM.Find("head").Remove()
-		e.DOM.Find("script").Remove()
-
-		// head タグと script タグは常時削除
 		e.DOM.Find("head").Remove()
 		e.DOM.Find("script").Remove()
 
@@ -77,31 +72,29 @@ func main() {
 
 	// href属性を持つa要素ごとにコールバックを実行
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-
 		link := e.Attr("href")
 
 		// .pdf で終わるリンク、mailto:/javascript:/# 始まるリンク、空のリンクはスキップ
 		if matched, _ := regexp.MatchString(`(?i)\.pdf$|^mailto:|^javascript:|^$|^#`, link); matched {
-			fmt.Println(">>     - スキップ: ", link)
+			fmt.Println(">>     - skip: ", link)
 			return
 		}
-		// 外部ドメインはスキップ
-		if !strings.Contains(link, targetDomain) {
-			fmt.Println(">>     - スキップ: ", link)
-			return
-		}
-
-		// http:// で始まるリンクは https:// に変換
+		// http:// を https:// に変換
 		if strings.HasPrefix(link, "http://") {
 			link = strings.Replace(link, "http://", "https://", 1)
 		}
-		// リンクが相対パスの場合は絶対URLに変換
+		// 相対パスを絶対パスに変換
 		if !strings.HasPrefix(link, "https://") {
 			link = e.Request.AbsoluteURL(link)
 		}
+		// 外部ドメインはスキップ
+		if !strings.HasPrefix(link, "https://" + targetDomain) {
+			fmt.Println(">>     - skip: ", link)
+			return
+		}
 
 		// ページ内で見つかったリンクを訪問
-		fmt.Println(">>     - リンク: ", link)
+		fmt.Println(">>     - link: ", link)
 		e.Request.Visit(link)
 	})
 
