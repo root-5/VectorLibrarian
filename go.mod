@@ -5,6 +5,7 @@ go 1.23.0
 require (
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.3.3
 	github.com/gocolly/colly/v2 v2.2.0
+	github.com/lib/pq v1.10.9
 )
 
 require (

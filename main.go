@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -11,9 +12,9 @@ import (
 	"github.com/JohannesKaufmann/html-to-markdown/v2/converter"
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/base"
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/commonmark"
-
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/table"
 	"github.com/gocolly/colly/v2"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -23,7 +24,6 @@ func main() {
 	// =======================================================================
 	// ログの設定
 	// =======================================================================
-	// ログファイルを作成
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Println("ログファイルの作成に失敗しました:", err)
@@ -31,11 +31,52 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	// ログファイルの文字をすべて削除
 	err = os.Truncate(logFilePath, 0)
 	if err != nil {
 		fmt.Println("ログファイルの初期化に失敗しました:", err)
 	}
+
+	// =======================================================================
+	// データベース接続
+	// =======================================================================
+	host := os.Getenv("POSTGRES_HOST")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DB")
+
+	psqlInfo := fmt.Sprintf("host=%s port=5432 user=%s password=%s dbname=%s sslmode=disable",
+		host, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		log.Fatal("データベースへの接続に失敗しました:", err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("データベースへのPingに失敗しました:", err)
+	}
+	log.Println("データベースへの接続に成功しました。")
+
+	// =======================================================================
+	// テーブル作成
+	// =======================================================================
+	createTableSQL := `
+    CREATE TABLE IF NOT EXISTS pages (
+        id SERIAL PRIMARY KEY,
+        url TEXT NOT NULL UNIQUE,
+        title TEXT,
+        description TEXT,
+        keywords TEXT,
+        markdown_content TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`
+	_, err = db.Exec(createTableSQL)
+	if err != nil {
+		log.Fatal("テーブルの作成に失敗しました:", err)
+	}
+	log.Println("テーブル'pages'を正常に作成または確認しました。")
 
 	// =======================================================================
 	// html-to-markdown のコンバーターを作成
@@ -111,9 +152,28 @@ func main() {
 			return
 		}
 		log.Println(">> markdown:\n" + markdown)
+
+		// =======================================================================
+		// データベースに保存
+		// =======================================================================
+		insertSQL := `
+        INSERT INTO pages (url, title, description, keywords, markdown_content)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (url) DO UPDATE SET
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            keywords = EXCLUDED.keywords,
+            markdown_content = EXCLUDED.markdown_content,
+            created_at = CURRENT_TIMESTAMP;`
+
+		_, err = db.Exec(insertSQL, e.Request.URL.String(), pageTitle, description, keywords, markdown)
+		if err != nil {
+			log.Printf("データベースへのデータ挿入に失敗しました: %v", err)
+		} else {
+			log.Println("データベースにデータを保存しました:", e.Request.URL.String())
+		}
 	})
 
-	// href属性を持つa要素ごとにコールバックを実行
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
 

@@ -18,6 +18,8 @@
 4. `go get -u github.com/JohannesKaufmann/html-to-markdown/v2`: HTMLをマークダウンに変換するライブラリのインストール
 5. `go mod tidy`: 依存関係の整理
 6. `npm install -g @google/gemini-cli`: Gemini CLI のインストール（Node はインストール済み）
+7. `go get github.com/lib/pq`: PostgreSQL ドライバのインストール（Gemini CLI が実行）
+8. `go mod tidy`
 
 ## ライブラリドキュメント
 https://pkg.go.dev/github.com/gocolly/colly#section-documentation
@@ -47,3 +49,9 @@ html, err := e.DOM.Html() // HTMLを取得
 ### 設定やコマンドライン引数
 https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/configuration.md
 https://zenn.dev/schroneko/articles/gemini-cli-tutorial
+
+## Gemini 修正内容メモ
+あまりにタスクを一気にこなすので、気になった点をメモしておかないと忘れてしまう。
+- テーブル作成の SQL, データ挿入の SQL が適切か確認
+- `docker compose` で作成される環境が本番用なので、開発用も用意させる
+- アプリケーションレイヤーのファイルは `app` ディレクトリに配置する
