@@ -24,7 +24,7 @@
 - `OnRequest`: 全てのリクエストで処理を実行したい
 - `OnResponse`: 全てのレスポンスで処理を実行したい
 
-## 挙動の理解
+### 挙動の理解
 - デフォルトで一読ロールしたページは飛ばしてくれる
 - `c.OnHTML("a[href]" ... c.Visit(e.Attr("href"))` のように、リンクをたどった場合、そのページ内で見つかった最初のリンクを訪問するためすべてのリンクを最初に取得するわけではない？
 - 現在は全件取得している
@@ -37,3 +37,7 @@ textContent := e.DOM.Text()
 // HTMLを取得
 html, err := e.DOM.Html()
 ```
+
+## ドキュメント
+https://pkg.go.dev/github.com/gocolly/colly#section-documentation
+https://pkg.go.dev/github.com/JohannesKaufmann/html-to-markdown/v2#section-documentation

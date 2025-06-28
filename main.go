@@ -17,23 +17,24 @@ import (
 )
 
 func main() {
+	targetDomain := "hotel-example-site.takeyaqa.dev" // ターゲットドメインを設定
+	logFilePath := "log/scraper.md"                   // ログファイルのパスを設定
+
 	// =======================================================================
 	// ログの設定
 	// =======================================================================
-	// ターゲットドメインを設定
-	targetDomain := "hotel-example-site.takeyaqa.dev"
-
 	// ログファイルを作成
-	logFile, err := os.OpenFile("log/scraper.md", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatalln("ログファイルの作成に失敗しました:", err)
+		fmt.Println("ログファイルの作成に失敗しました:", err)
 	}
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
 	// ログファイルの文字をすべて削除
-	if err := os.Truncate("log/scraper.md", 0); err != nil {
-		log.Fatalln("ログファイルの初期化に失敗しました:", err)
+	err = os.Truncate(logFilePath, 0)
+	if err != nil {
+		fmt.Println("ログファイルの初期化に失敗しました:", err)
 	}
 
 	// =======================================================================
