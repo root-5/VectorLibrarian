@@ -15,6 +15,8 @@
 1. `go mod init github.com/root-5/VectorLibrarian`: モジュールの初期化
 2. `go get github.com/gocolly/colly/v2`: クローリングライブラリのインストール
 3. `go run main.go`: アプリケーションの実行
+4. `go get -u github.com/JohannesKaufmann/html-to-markdown/v2`: HTMLをマークダウンに変換するライブラリのインストール
+5. `go mod tidy`: 依存関係の整理
 
 ## colly の使い方
 - `OnHTML`: 指定した要素が見つかった時に処理を実行したい
