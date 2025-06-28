@@ -11,7 +11,27 @@
 市役所や市民に使ってもらうのではなく、使いたくなるような
 
 # メモ
+## 実行コマンド
 1. `go mod init github.com/root-5/VectorLibrarian`: モジュールの初期化
 2. `go get github.com/gocolly/colly/v2`: クローリングライブラリのインストール
 3. `go run main.go`: アプリケーションの実行
-4. 
+
+## colly の使い方
+- `OnHTML`: 指定した要素が見つかった時に処理を実行したい
+- `OnError`: リクエストでエラーが発生した時に処理を実行したい
+- `OnRequest`: 全てのリクエストで処理を実行したい
+- `OnResponse`: 全てのレスポンスで処理を実行したい
+
+## 挙動の理解
+- デフォルトで一読ロールしたページは飛ばしてくれる
+- `c.OnHTML("a[href]" ... c.Visit(e.Attr("href"))` のように、リンクをたどった場合、そのページ内で見つかった最初のリンクを訪問するためすべてのリンクを最初に取得するわけではない？
+- 現在は全件取得している
+
+### OnHTML 内
+```go
+// テキストコンテンツを取得
+textContent := e.DOM.Text()
+
+// HTMLを取得
+html, err := e.DOM.Html()
+```
