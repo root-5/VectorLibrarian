@@ -10,34 +10,40 @@
 
 市役所や市民に使ってもらうのではなく、使いたくなるような
 
-# メモ
+# 作業メモ
 ## 実行コマンド
 1. `go mod init github.com/root-5/VectorLibrarian`: モジュールの初期化
 2. `go get github.com/gocolly/colly/v2`: クローリングライブラリのインストール
 3. `go run main.go`: アプリケーションの実行
 4. `go get -u github.com/JohannesKaufmann/html-to-markdown/v2`: HTMLをマークダウンに変換するライブラリのインストール
 5. `go mod tidy`: 依存関係の整理
+6. `npm install -g @google/gemini-cli`: Gemini CLI のインストール（Node はインストール済み）
 
-## colly の使い方
+## ライブラリドキュメント
+https://pkg.go.dev/github.com/gocolly/colly#section-documentation
+https://pkg.go.dev/github.com/JohannesKaufmann/html-to-markdown/v2#section-documentation
+
+## colly
+### 使い方
 - `OnHTML`: 指定した要素が見つかった時に処理を実行したい
 - `OnError`: リクエストでエラーが発生した時に処理を実行したい
 - `OnRequest`: 全てのリクエストで処理を実行したい
 - `OnResponse`: 全てのレスポンスで処理を実行したい
+
+OnHTML 内の記述例
+```go
+textContent := e.DOM.Text() // テキストコンテンツを取得
+html, err := e.DOM.Html() // HTMLを取得
+```
 
 ### 挙動の理解
 - デフォルトで一読ロールしたページは飛ばしてくれる
 - `c.OnHTML("a[href]" ... c.Visit(e.Attr("href"))` のように、リンクをたどった場合、そのページ内で見つかった最初のリンクを訪問するためすべてのリンクを最初に取得するわけではない？
 - 現在は全件取得している
 
-### OnHTML 内
-```go
-// テキストコンテンツを取得
-textContent := e.DOM.Text()
+## Gemini CLI
+1. `npm install -g @google/gemini-cli`
 
-// HTMLを取得
-html, err := e.DOM.Html()
-```
-
-## ドキュメント
-https://pkg.go.dev/github.com/gocolly/colly#section-documentation
-https://pkg.go.dev/github.com/JohannesKaufmann/html-to-markdown/v2#section-documentation
+### 設定やコマンドライン引数
+https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/configuration.md
+https://zenn.dev/schroneko/articles/gemini-cli-tutorial
