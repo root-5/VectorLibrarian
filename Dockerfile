@@ -1,9 +1,9 @@
 # ビルドステージ
 FROM golang:1.23.0-alpine AS builder
 WORKDIR /app
-COPY go.mod go.sum ./
+COPY app/go.mod app/go.sum ./
 RUN go mod download
-COPY . .
+COPY app/ . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /main main.go
 
 # 実行ステージ

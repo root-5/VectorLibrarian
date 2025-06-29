@@ -55,3 +55,4 @@ https://zenn.dev/schroneko/articles/gemini-cli-tutorial
 - テーブル作成の SQL, データ挿入の SQL が適切か確認
 - `docker compose` で作成される環境が本番用なので、開発用も用意させる
 - アプリケーションレイヤーのファイルは `app` ディレクトリに配置する
+- air の設定を確認
