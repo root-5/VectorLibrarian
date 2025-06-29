@@ -67,3 +67,7 @@ https://zenn.dev/schroneko/articles/gemini-cli-tutorial
 - `docker compose` で作成される環境が本番用なので、開発用も用意させる
 - アプリケーションレイヤーのファイルは `app` ディレクトリに配置する
 - air の設定を確認
+
+## TablePlus
+Postgres に INSERT したデータを確認する際に使用した GUI ツール。
+.env, compose.yml にある DB 接続情報を使って接続する。「SSL mode」は「DISABLE」で設定。

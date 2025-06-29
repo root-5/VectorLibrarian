@@ -1,4 +1,4 @@
-module github.com/root-5/VectorLibrarian
+module app
 
 go 1.23.0
 

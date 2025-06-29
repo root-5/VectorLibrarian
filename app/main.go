@@ -1,10 +1,8 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"os"
+	"app/controller/log"
+	"app/controller/postgres"
 	"regexp"
 	"strings"
 	"time"
@@ -19,65 +17,21 @@ import (
 
 func main() {
 	targetDomain := "hotel-example-site.takeyaqa.dev" // ターゲットドメインを設定
-	logFilePath := "log/scraper.md"                   // ログファイルのパスを設定
 	collyCacheDir := "./cache"                        // Colly のキャッシュディレクトリを設定
-
-	// =======================================================================
-	// ログの設定
-	// =======================================================================
-	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		fmt.Println("ログファイルの作成に失敗しました:", err)
-	}
-	defer logFile.Close()
-	log.SetOutput(logFile)
-
-	err = os.Truncate(logFilePath, 0)
-	if err != nil {
-		fmt.Println("ログファイルの初期化に失敗しました:", err)
-	}
 
 	// =======================================================================
 	// データベース接続
 	// =======================================================================
-	host := os.Getenv("POSTGRES_HOST")
-	user := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	dbname := os.Getenv("POSTGRES_DB")
-
-	psqlInfo := fmt.Sprintf("host=%s port=5432 user=%s password=%s dbname=%s sslmode=disable",
-		host, user, password, dbname)
-
-	db, err := sql.Open("postgres", psqlInfo)
+	err := postgres.Connect()
 	if err != nil {
-		fmt.Println("データベースへの接続に失敗しました:", err)
 		return
 	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("データベースへの Ping に失敗しました:", err)
-		return
-	}
-	fmt.Println("データベースへの接続に成功しました")
 
 	// =======================================================================
 	// テーブル作成
 	// =======================================================================
-	createTableSQL := `
-	CREATE TABLE IF NOT EXISTS pages (
-		id SERIAL PRIMARY KEY,
-		url TEXT NOT NULL UNIQUE,
-		title TEXT,
-		description TEXT,
-		keywords TEXT,
-		markdown_content TEXT,
-		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-	);`
-	_, err = db.Exec(createTableSQL)
+	err = postgres.InitTable()
 	if err != nil {
-		fmt.Println("テーブル作成が失敗しました:", err)
 		return
 	}
 
@@ -116,11 +70,12 @@ func main() {
 
 	// リクエスト前に "アクセス >> " を表示
 	c.OnRequest(func(r *colly.Request) {
-		log.Println(">> URL:", r.URL.String())
+		log.Info(">> URL:" + r.URL.String())
 	})
 
 	// テキストコンテンツを抽出するためのコールバック
 	c.OnHTML("html", func(e *colly.HTMLElement) {
+		url := e.Request.URL.String()
 		pageTitle := e.ChildText("title") // ページのタイトルを取得
 		if pageTitle == "" {
 			pageTitle = "--"
@@ -133,7 +88,7 @@ func main() {
 		if keywords == "" {
 			keywords = "--"
 		}
-		log.Printf(">> Page Info:\n- Title: %s\n- Description: %s\n- Keywords: %s", pageTitle, description, keywords)
+		// log.Info(">> Page Info:\n- Title: " + pageTitle + "\n- Description: " + description + "\n- Keywords: " + keywords)
 
 		// head, header, footer, script タグを削除（ルートのみ header, footer は残す）
 		if e.Request.URL.Path != "/" {
@@ -146,34 +101,22 @@ func main() {
 		// HTMLをマークダウン形式に変換して取得
 		html, err := e.DOM.Html()
 		if err != nil {
-			fmt.Println("HTMLの取得に失敗しました:", err)
+			log.Error(err)
 			return
 		}
 		markdown, err := conv.ConvertString(html)
 		if err != nil {
-			fmt.Println("マークダウンへの変換に失敗しました:", err)
+			log.Error(err)
 			return
 		}
-		log.Println(">> markdown:\n" + markdown)
+		// log.Info(">> markdown:\n" + markdown)
 
 		// =======================================================================
 		// データベースに保存
 		// =======================================================================
-		insertSQL := `
-		INSERT INTO pages (url, title, description, keywords, markdown_content)
-		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (url) DO UPDATE SET
-			title = EXCLUDED.title,
-			description = EXCLUDED.description,
-			keywords = EXCLUDED.keywords,
-			markdown_content = EXCLUDED.markdown_content,
-			created_at = CURRENT_TIMESTAMP;`
-
-		_, err = db.Exec(insertSQL, e.Request.URL.String(), pageTitle, description, keywords, markdown)
+		err = postgres.SaveCrawledData(url, pageTitle, description, keywords, markdown)
 		if err != nil {
-			log.Printf("データベースへのデータ挿入に失敗しました: %v", err)
-		} else {
-			log.Println("データベースにデータを保存しました:", e.Request.URL.String())
+			return
 		}
 	})
 
@@ -182,7 +125,7 @@ func main() {
 
 		// .pdf で終わるリンク、mailto:/javascript:/# 始まるリンク、空のリンクはスキップ
 		if matched, _ := regexp.MatchString(`(?i)\.pdf$|^mailto:|^javascript:|^$|^#`, link); matched {
-			// fmt.Println(">>     - skip: ", link)
+			// log.Info(">>     - skip: " + link)
 			return
 		}
 		// http:// を https:// に変換
@@ -195,12 +138,12 @@ func main() {
 		}
 		// 外部ドメインはスキップ
 		if !strings.HasPrefix(link, "https://"+targetDomain) {
-			// fmt.Println(">>     - skip: ", link)
+			// log.Info(">>     - skip: " + link)
 			return
 		}
 
 		// ページ内で見つかったリンクを訪問
-		// fmt.Println(">>     - link: ", link)
+		// log.Info(">>     - link: " + link)
 		e.Request.Visit(link)
 	})
 
