@@ -21,6 +21,5 @@
 go.work
 go.work.sum
 
-cache/
-/app/log/
+/app/cache/
 /app/tmp/
