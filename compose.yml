@@ -1,10 +1,7 @@
-version: '3.8'
-
 services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
     container_name: go_app_dev
     volumes:
       - ./app:/app
@@ -12,15 +9,14 @@ services:
       - db
     environment:
       - POSTGRES_HOST=db
+    env_file: .env
 
   db:
     image: postgres:17-alpine
     container_name: postgres_db_dev
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
       TZ: 'Asia/Tokyo'
+    env_file: .env
     ports:
       - "5433:5432"
     volumes:

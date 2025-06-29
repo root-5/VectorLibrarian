@@ -1,25 +1,24 @@
-version: '3.8'
-
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     container_name: go_app
     volumes:
-      - ./log:/root/log
-      - ./cache:/root/cache
+      - ./app/log:/root/log
+      - ./app/cache:/root/cache
     depends_on:
       - db
     environment:
       - POSTGRES_HOST=db
+    env_file: .prod.env
 
   db:
     image: postgres:17-alpine
     container_name: postgres_db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
       TZ: 'Asia/Tokyo'
+    env_file: .prod.env
     ports:
       - "5432:5432"
     volumes:

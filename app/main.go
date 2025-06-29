@@ -20,6 +20,7 @@ import (
 func main() {
 	targetDomain := "hotel-example-site.takeyaqa.dev" // ターゲットドメインを設定
 	logFilePath := "log/scraper.md"                   // ログファイルのパスを設定
+	collyCacheDir := "./cache"                        // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
 	// ログの設定
@@ -49,34 +50,36 @@ func main() {
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		log.Fatal("データベースへの接続に失敗しました:", err)
+		fmt.Println("データベースへの接続に失敗しました:", err)
+		return
 	}
 	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("データベースへのPingに失敗しました:", err)
+		fmt.Println("データベースへの Ping に失敗しました:", err)
+		return
 	}
-	log.Println("データベースへの接続に成功しました。")
+	fmt.Println("データベースへの接続に成功しました")
 
 	// =======================================================================
 	// テーブル作成
 	// =======================================================================
 	createTableSQL := `
-    CREATE TABLE IF NOT EXISTS pages (
-        id SERIAL PRIMARY KEY,
-        url TEXT NOT NULL UNIQUE,
-        title TEXT,
-        description TEXT,
-        keywords TEXT,
-        markdown_content TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );`
+	CREATE TABLE IF NOT EXISTS pages (
+		id SERIAL PRIMARY KEY,
+		url TEXT NOT NULL UNIQUE,
+		title TEXT,
+		description TEXT,
+		keywords TEXT,
+		markdown_content TEXT,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+	);`
 	_, err = db.Exec(createTableSQL)
 	if err != nil {
-		log.Fatal("テーブルの作成に失敗しました:", err)
+		fmt.Println("テーブル作成が失敗しました:", err)
+		return
 	}
-	log.Println("テーブル'pages'を正常に作成または確認しました。")
 
 	// =======================================================================
 	// html-to-markdown のコンバーターを作成
@@ -99,7 +102,7 @@ func main() {
 	c := colly.NewCollector(
 		colly.AllowedDomains(targetDomain), // 許可するドメインを設定
 		colly.MaxDepth(2),                  // 最大深度を 2 に設定
-		colly.CacheDir("./cache"),          // キャッシュディレクトリを指定
+		colly.CacheDir(collyCacheDir),      // キャッシュディレクトリを指定
 		// colly.Async(true),                  // 非同期モードを有効にする
 		// colly.IgnoreRobotsTxt(),            // robots.txt を無視
 	)
@@ -157,14 +160,14 @@ func main() {
 		// データベースに保存
 		// =======================================================================
 		insertSQL := `
-        INSERT INTO pages (url, title, description, keywords, markdown_content)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (url) DO UPDATE SET
-            title = EXCLUDED.title,
-            description = EXCLUDED.description,
-            keywords = EXCLUDED.keywords,
-            markdown_content = EXCLUDED.markdown_content,
-            created_at = CURRENT_TIMESTAMP;`
+		INSERT INTO pages (url, title, description, keywords, markdown_content)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (url) DO UPDATE SET
+			title = EXCLUDED.title,
+			description = EXCLUDED.description,
+			keywords = EXCLUDED.keywords,
+			markdown_content = EXCLUDED.markdown_content,
+			created_at = CURRENT_TIMESTAMP;`
 
 		_, err = db.Exec(insertSQL, e.Request.URL.String(), pageTitle, description, keywords, markdown)
 		if err != nil {

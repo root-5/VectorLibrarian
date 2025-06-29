@@ -1,15 +1,13 @@
-# ビルドステージ
-FROM golang:1.23.0-alpine AS builder
+FROM golang:1.24.4-alpine
+
 WORKDIR /app
+
 COPY app/go.mod app/go.sum ./
 RUN go mod download
-COPY app/ . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /main main.go
 
-# 実行ステージ
-FROM alpine:latest
-WORKDIR /root/
-COPY --from=builder /main .
-# log と cache ディレクトリを作成
-RUN mkdir -p /root/log /root/cache
-CMD ["./main"]
+COPY app/ ./
+
+CMD ["tail", "-f", "/dev/null"]
+
+# RUN go install github.com/air-verse/air@latest
+# CMD ["air", "-c", ".air.toml"]

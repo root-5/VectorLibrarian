@@ -11,7 +11,8 @@
 市役所や市民に使ってもらうのではなく、使いたくなるような
 
 # 作業メモ
-## 実行コマンド
+## コマンド
+### 実行コマンドメモ
 1. `go mod init github.com/root-5/VectorLibrarian`: モジュールの初期化
 2. `go get github.com/gocolly/colly/v2`: クローリングライブラリのインストール
 3. `go run main.go`: アプリケーションの実行
@@ -20,6 +21,16 @@
 6. `npm install -g @google/gemini-cli`: Gemini CLI のインストール（Node はインストール済み）
 7. `go get github.com/lib/pq`: PostgreSQL ドライバのインストール（Gemini CLI が実行）
 8. `go mod tidy`
+
+### Docker 関係
+- `docker compose up -d`: 開発環境コンテナの起動
+- `docker compose down`: 開発環境コンテナの停止
+- `docker compose down --rmi all --volumes`: 開発環境コンテナの停止とイメージ、ボリュームの削除
+- `docker compose exec app sh`: 開発環境コンテナ内でシェルを開く
+- `docker compose exec app go run main.go`: 開発環境コンテナ内でアプリケーションを実行
+- `docker compose exec db sh`: 開発環境コンテナ内でシェルを開く
+  - `psql -U user -d db`: PostgreSQL に接続
+  - `SELECT * FROM pages;`: データベースの内容を確認
 
 ## ライブラリドキュメント
 https://pkg.go.dev/github.com/gocolly/colly#section-documentation
