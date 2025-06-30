@@ -50,12 +50,16 @@ func InitTable() (err error) {
 	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS pages (
 		id SERIAL PRIMARY KEY,
-		url TEXT NOT NULL UNIQUE,
+		domain TEXT NOT NULL,
+		path TEXT NOT NULL,
 		title TEXT,
 		description TEXT,
 		keywords TEXT,
-		markdown_content TEXT,
-		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		markdown TEXT,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		hash TEXT,
+		UNIQUE (domain, path)
 	);`
 
 	_, err = db.Exec(createTableSQL)
