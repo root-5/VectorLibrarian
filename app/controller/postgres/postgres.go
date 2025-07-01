@@ -52,13 +52,14 @@ func InitTable() (err error) {
 		id SERIAL PRIMARY KEY,
 		domain TEXT NOT NULL,
 		path TEXT NOT NULL,
-		title TEXT,
-		description TEXT,
-		keywords TEXT,
-		markdown TEXT,
-		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		hash TEXT,
+		title TEXT NOT NULL,
+		description TEXT NOT NULL,
+		keywords TEXT NOT NULL,
+		markdown TEXT NOT NULL,
+		hash TEXT NOT NULL,
+		created_at TIMESTAMP NOT NULL WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMP WITH TIME ZONE,
 		UNIQUE (domain, path)
 	);`
 
