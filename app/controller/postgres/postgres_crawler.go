@@ -3,11 +3,9 @@ package postgres
 
 import (
 	"app/controller/log"
-	"app/controller/model"
 	"crypto/sha1"
 	"encoding/hex"
 	"net/url"
-	"strings"
 )
 
 /*
@@ -43,41 +41,21 @@ func SaveCrawledData(urlStr, title, description, keywords, markdown string) (err
 
 	// すでに存在する場合は更新、存在しない場合は新規挿入
 	if exists {
-		// 更新処理
-		// カラム名をmodelから取得
-		columnNames := model.GetColumnNames(&model.PageContentAtUpdate{})
-		columnNamesStr := strings.Join(columnNames, ", ")
-		placeholders := model.GetPlaceholders(columnNames)
-		placeholdersStr := strings.Join(placeholders, ", ")
-		whereTargets := []interface{}{model.PageContentAtUpdate{}.Domain, model.PageContentAtUpdate{}.Path}
-		whereTargetsStr := model.GetWhereTargetStr(columnNames, placeholders, whereTargets)
-
 		updateSQL := `
-		UPDATE pages (` + columnNamesStr + `)
-		VALUES (` + placeholdersStr + `)
-		WHERE ` + whereTargetsStr + `;
+		UPDATE pages
+		SET title = $1, description = $2, keywords = $3, markdown = $4, hash = $5, updated_at = CURRENT_TIMESTAMP
+		WHERE domain = $6 AND path = $7;
 		`
-		// updateSQL := `
-		// UPDATE pages (` + columnNamesStr + `)
-		// VALUES (` + placeholdersStr + `)
-		// WHERE domain = $5 AND path = $6;
-		// `
-		_, err = db.Exec(updateSQL, domain, path, title, description, keywords, markdown, hashStr)
+		_, err = db.Exec(updateSQL, title, description, keywords, markdown, hashStr, domain, path)
 		if err != nil {
 			log.Error(err)
 			return err
 		}
 		return nil
 	} else {
-		// 存在しない場合は新規挿入
-		columnNames := model.GetColumnNames(&model.PageContentAtInsert{})
-		columnNamesStr := strings.Join(columnNames, ", ")
-		placeholders := model.GetPlaceholders(columnNames)
-		placeholdersStr := strings.Join(placeholders, ", ")
-
 		insertSQL := `
-		INSERT INTO pages (` + columnNamesStr + `)
-		VALUES (` + placeholdersStr + `)
+		INSERT INTO pages (domain, path, title, description, keywords, markdown, created_at, updated_at, hash)
+		VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7)
 		`
 		_, err = db.Exec(insertSQL, domain, path, title, description, keywords, markdown, hashStr)
 		if err != nil {
