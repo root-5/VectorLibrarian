@@ -75,7 +75,9 @@ func main() {
 
 	// テキストコンテンツを抽出するためのコールバック
 	c.OnHTML("html", func(e *colly.HTMLElement) {
-		url := e.Request.URL.String()
+		domain := e.Request.URL.Hostname()
+		path := e.Request.URL.Path
+
 		pageTitle := e.ChildText("title") // ページのタイトルを取得
 		if pageTitle == "" {
 			pageTitle = "--"
@@ -114,7 +116,7 @@ func main() {
 		// =======================================================================
 		// データベースに保存
 		// =======================================================================
-		err = postgres.SaveCrawledData(url, pageTitle, description, keywords, markdown)
+		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown)
 		if err != nil {
 			return
 		}
