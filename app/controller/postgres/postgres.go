@@ -2,16 +2,20 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"os"
 
 	"app/controller/log"
+	"app/domain/model"
 
-	_ "github.com/lib/pq"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
 )
 
 // 型定義
-var db *sql.DB
+var db *bun.DB
 
 /*
 DB の接続をする関数
@@ -23,22 +27,12 @@ func Connect() (err error) {
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbname := os.Getenv("POSTGRES_DB")
-	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=" + dbname + " port=5432" + " sslmode=disable TimeZone=Asia/Tokyo"
+	port := "5432"
+	sslmode := "disable"
+	dsn := "postgres://" + user + ":" + password + "@" + host + ":" + port + "/" + dbname + "?sslmode=" + sslmode
 
-	// DB に接続
-	db, err = sql.Open("postgres", dsn)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
-	// DB の接続を確認
-	err = db.Ping()
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
+	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	db = bun.NewDB(sqldb, pgdialect.New())
 	return nil
 }
 
@@ -47,27 +41,13 @@ DB の初期化をする関数
   - return) err	エラー
 */
 func InitTable() (err error) {
-	createTableSQL := `
-	CREATE TABLE IF NOT EXISTS pages (
-		id SERIAL PRIMARY KEY,
-		domain TEXT NOT NULL,
-		path TEXT NOT NULL,
-		title TEXT NOT NULL,
-		description TEXT NOT NULL,
-		keywords TEXT NOT NULL,
-		markdown TEXT NOT NULL,
-		hash TEXT NOT NULL,
-		created_at TIMESTAMP NOT NULL WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NOT NULL WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMP WITH TIME ZONE,
-		UNIQUE (domain, path)
-	);`
-
-	_, err = db.Exec(createTableSQL)
+	_, err = db.NewCreateTable().
+		Model((*model.Page)(nil)).
+		IfNotExists().
+		Exec(context.Background())
 	if err != nil {
 		log.Error(err)
 		return
 	}
-
 	return nil
 }
