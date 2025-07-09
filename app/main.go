@@ -3,6 +3,8 @@ package main
 import (
 	"app/controller/log"
 	"app/controller/postgres"
+	"crypto/sha1"
+	"encoding/hex"
 	"regexp"
 	"strings"
 	"time"
@@ -20,16 +22,12 @@ func main() {
 	collyCacheDir := "./cache"                        // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
-	// データベース接続
+	// データベース接続とテーブル初期化
 	// =======================================================================
 	err := postgres.Connect()
 	if err != nil {
 		return
 	}
-
-	// =======================================================================
-	// テーブル作成
-	// =======================================================================
 	err = postgres.InitTable()
 	if err != nil {
 		return
@@ -65,7 +63,6 @@ func main() {
 	c.Limit(&colly.LimitRule{
 		DomainGlob: targetDomain, // 対象ドメインを指定
 		Delay:      time.Second,  // リクエスト間の最小遅延
-		// RandomDelay: time.Second, // リクエスト間のランダム遅延
 	})
 
 	// リクエスト前に "アクセス >> " を表示
@@ -78,19 +75,19 @@ func main() {
 		domain := e.Request.URL.Hostname()
 		path := e.Request.URL.Path
 
-		pageTitle := e.ChildText("title") // ページのタイトルを取得
+		// ページタイトル、ディスクリプション、キーワードを取得（それぞれ存在しない場合は "--" を設定）
+		pageTitle := e.ChildText("title")
 		if pageTitle == "" {
 			pageTitle = "--"
 		}
-		description := e.ChildAttr("meta[name=description]", "content") // ディスクリプションを取得
+		description := e.ChildAttr("meta[name=description]", "content")
 		if description == "" {
 			description = "--"
 		}
-		keywords := e.ChildAttr("meta[name=keywords]", "content") // キーワードを取得
+		keywords := e.ChildAttr("meta[name=keywords]", "content")
 		if keywords == "" {
 			keywords = "--"
 		}
-		// log.Info(">> Page Info:\n- Title: " + pageTitle + "\n- Description: " + description + "\n- Keywords: " + keywords)
 
 		// head, header, footer, script タグを削除（ルートのみ header, footer は残す）
 		if e.Request.URL.Path != "/" {
@@ -100,7 +97,7 @@ func main() {
 		e.DOM.Find("head").Remove()
 		e.DOM.Find("script").Remove()
 
-		// HTMLをマークダウン形式に変換して取得
+		// HTML をマークダウン形式に変換して取得
 		html, err := e.DOM.Html()
 		if err != nil {
 			log.Error(err)
@@ -111,12 +108,15 @@ func main() {
 			log.Error(err)
 			return
 		}
-		// log.Info(">> markdown:\n" + markdown)
+
+		// markdown のハッシュを計算
+		hashBin := sha1.Sum([]byte(markdown))
+		hash := hex.EncodeToString(hashBin[:])
 
 		// =======================================================================
 		// データベースに保存
 		// =======================================================================
-		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown)
+		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash)
 		if err != nil {
 			return
 		}

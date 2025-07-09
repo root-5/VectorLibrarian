@@ -3,8 +3,8 @@ package postgres
 
 import (
 	"app/controller/log"
-	"crypto/sha1"
-	"encoding/hex"
+	"app/domain/model"
+	"context"
 )
 
 /*
@@ -16,14 +16,23 @@ DB にクロールしたデータを保存する関数
   - markdown		ページのマークダウンコンテンツ
   - return) err	エラー
 */
-func SaveCrawledData(domain, path, title, description, keywords, markdown string) (err error) {
-	// markdownのハッシュを計算
-	hash := sha1.Sum([]byte(markdown))
-	hashStr := hex.EncodeToString(hash[:])
+func SaveCrawledData(domain, path, title, description, keywords, markdown, hash string) (err error) {
+	// pages テーブルのモデルを作成
+	page := &model.Page{
+		Domain:      domain,
+		Path:        path,
+		Title:       title,
+		Description: description,
+		Keywords:    keywords,
+		Markdown:    markdown,
+		Hash:        hash,
+	}
 
-	// すでに存在するかどうかをドメインとパスで確認
-	var exists bool
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM pages WHERE domain = $1 AND path = $2)", domain, path).Scan(&exists)
+	// 同 URL の存在確認
+	exists, err := db.NewSelect().
+		Model(page).
+		Where("domain = ? AND path = ?", domain, path).
+		Exists(context.Background())
 	if err != nil {
 		log.Error(err)
 		return err
@@ -31,27 +40,25 @@ func SaveCrawledData(domain, path, title, description, keywords, markdown string
 
 	// すでに存在する場合は更新、存在しない場合は新規挿入
 	if exists {
-		updateSQL := `
-		UPDATE pages
-		SET title = $1, description = $2, keywords = $3, markdown = $4, hash = $5, updated_at = CURRENT_TIMESTAMP
-		WHERE domain = $6 AND path = $7;
-		`
-		_, err = db.Exec(updateSQL, title, description, keywords, markdown, hashStr, domain, path)
-		if err != nil {
-			log.Error(err)
-			return err
-		}
-		return nil
+		// 更新
+		_, err = db.NewUpdate().
+			Model(page).
+			Where("domain = ? AND path = ?", domain, path).
+			Set("title = ?", title).
+			Set("description = ?", description).
+			Set("keywords = ?", keywords).
+			Set("markdown = ?", markdown).
+			Set("hash = ?", hash).
+			Set("updated_at = CURRENT_TIMESTAMP").
+			Exec(context.Background())
 	} else {
-		insertSQL := `
-		INSERT INTO pages (domain, path, title, description, keywords, markdown, created_at, updated_at, hash)
-		VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7)
-		`
-		_, err = db.Exec(insertSQL, domain, path, title, description, keywords, markdown, hashStr)
-		if err != nil {
-			log.Error(err)
-			return err
-		}
-		return nil
+		// 新規挿入
+		_, err = db.NewInsert().Model(page).Exec(context.Background())
 	}
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return nil
 }
