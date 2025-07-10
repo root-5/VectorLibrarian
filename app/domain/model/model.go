@@ -14,7 +14,7 @@ type Page struct {
 	Domain      string    `bun:"domain,notnull,unique:url,type:varchar(100)"`         // ドメイン
 	Path        string    `bun:"path,notnull,unique:url,type:varchar(255)"`           // パス
 	Title       string    `bun:"title,notnull,type:varchar(100)"`                     // ページタイトル
-	Description string    `bun:"description,notnull,type:varchar(255)"`               // ページ説明
+	Description string    `bun:"description,notnull,type:varchar(255)"`               // ディスクリプション
 	Keywords    string    `bun:"keywords,notnull,type:varchar(255)"`                  // キーワード
 	Markdown    string    `bun:"markdown,notnull,type:text"`                          // Markdown コンテンツ
 	Hash        string    `bun:"hash,notnull,type:char(64)"`                          // コンテンツのハッシュ値

@@ -17,6 +17,23 @@ DB にクロールしたデータを保存する関数
   - return) err	エラー
 */
 func SaveCrawledData(domain, path, title, description, keywords, markdown, hash string) (err error) {
+	// 文字列の長さが制限を超えている場合は切り詰める
+	if len(domain) > 100 {
+		domain = domain[:100]
+	}
+	if len(path) > 255 {
+		path = path[:255]
+	}
+	if len(title) > 100 {
+		title = title[:100]
+	}
+	if len(description) > 255 {
+		description = description[:255]
+	}
+	if len(keywords) > 255 {
+		keywords = keywords[:255]
+	}
+
 	// pages テーブルのモデルを作成
 	page := &model.Page{
 		Domain:      domain,
