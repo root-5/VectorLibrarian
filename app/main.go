@@ -18,8 +18,11 @@ import (
 )
 
 func main() {
-	targetDomain := "hotel-example-site.takeyaqa.dev" // ターゲットドメインを設定
-	collyCacheDir := "./cache"                        // Colly のキャッシュディレクトリを設定
+	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
+	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
+		"/prsite/",
+	}
+	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
 	// データベース接続とテーブル初期化
@@ -127,7 +130,6 @@ func main() {
 
 		// .pdf で終わるリンク、mailto:/javascript:/# 始まるリンク、空のリンクはスキップ
 		if matched, _ := regexp.MatchString(`(?i)\.pdf$|^mailto:|^javascript:|^$|^#`, link); matched {
-			// log.Info(">>     - skip: " + link)
 			return
 		}
 		// http:// を https:// に変換
@@ -140,12 +142,16 @@ func main() {
 		}
 		// 外部ドメインはスキップ
 		if !strings.HasPrefix(link, "https://"+targetDomain) {
-			// log.Info(">>     - skip: " + link)
 			return
+		}
+		// 特定のパス以外をスキップ
+		for _, allowedPath := range allowedPaths {
+			if !strings.Contains(link, allowedPath) {
+				return
+			}
 		}
 
 		// ページ内で見つかったリンクを訪問
-		// log.Info(">>     - link: " + link)
 		e.Request.Visit(link)
 	})
 
