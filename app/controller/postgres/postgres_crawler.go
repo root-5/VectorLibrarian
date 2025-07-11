@@ -8,6 +8,27 @@ import (
 )
 
 /*
+DB に同一のハッシュ値を持つページが存在するか確認する関数
+  - hash			確認するページのハッシュ値
+  - return) exists	同一のハッシュ値を持つページが存在するかどうか
+  - return) err		エラー
+*/
+func CheckHashExists(hash string) (exists bool, err error) {
+	// ハッシュ値を持つページが存在するか確認
+	page := &model.Page{Hash: hash}
+	exists, err = db.NewSelect().
+		Model(page).
+		Where("hash = ?", hash).
+		Exists(context.Background())
+	if err != nil {
+		log.Error(err)
+		return false, err
+	}
+
+	return exists, nil
+}
+
+/*
 DB にクロールしたデータを保存する関数
   - url			クロールしたページの URL
   - title			ページのタイトル
@@ -45,33 +66,17 @@ func SaveCrawledData(domain, path, title, description, keywords, markdown, hash 
 		Hash:        hash,
 	}
 
-	// 同 URL の存在確認
-	exists, err := db.NewSelect().
-		Model(page).
-		Where("domain = ? AND path = ?", domain, path).
-		Exists(context.Background())
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
 	// すでに存在する場合は更新、存在しない場合は新規挿入
-	if exists {
-		// 更新
-		_, err = db.NewUpdate().
-			Model(page).
-			Where("domain = ? AND path = ?", domain, path).
-			Set("title = ?", title).
-			Set("description = ?", description).
-			Set("keywords = ?", keywords).
-			Set("markdown = ?", markdown).
-			Set("hash = ?", hash).
-			Set("updated_at = CURRENT_TIMESTAMP").
-			Exec(context.Background())
-	} else {
-		// 新規挿入
-		_, err = db.NewInsert().Model(page).Exec(context.Background())
-	}
+	_, err = db.NewInsert().
+		Model(page).
+		On("CONFLICT (domain, path) DO UPDATE").
+		Set("title = ?", title).
+		Set("description = ?", description).
+		Set("keywords = ?", keywords).
+		Set("markdown = ?", markdown).
+		Set("hash = ?", hash).
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Exec(context.Background())
 	if err != nil {
 		log.Error(err)
 		return err

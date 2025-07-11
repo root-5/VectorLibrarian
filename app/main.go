@@ -11,6 +11,9 @@ import (
 )
 
 func main() {
+	// =======================================================================
+	// 初期設定・定数
+	// =======================================================================
 	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
 		"/prsite/",
@@ -38,8 +41,6 @@ func main() {
 		colly.AllowedDomains(targetDomain), // 許可するドメインを設定
 		colly.MaxDepth(maxScrapeDepth),     // 最大深度を設定
 		colly.CacheDir(collyCacheDir),      // キャッシュディレクトリを指定
-		// colly.Async(true),                  // 非同期モードを有効にする
-		// colly.IgnoreRobotsTxt(),            // robots.txt を無視
 	)
 
 	// リクエスト間で 1 秒の時間を空ける
@@ -53,11 +54,22 @@ func main() {
 		log.Info(">> URL:" + r.URL.String())
 	})
 
-	// テキストコンテンツを抽出するためのコールバック
+	// html タグを見つけたときの処理
 	c.OnHTML("html", func(e *colly.HTMLElement) {
+		// ページデータを抽出
 		domain, path, pageTitle, description, keywords, markdown, hash, err := processor.HtmlToPageData(e)
 		if err != nil {
 			return
+		}
+
+		// ハッシュ値を照合
+		exists, err := postgres.CheckHashExists(hash)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		if exists {
+			return // 既に保存されているハッシュがあればスキップ
 		}
 
 		// ページデータをデータベースに保存
@@ -67,6 +79,7 @@ func main() {
 		}
 	})
 
+	// a タグを見つけたときの処理
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// URL を取得
 		url, isValid := processor.GetLinkUrl(e, targetDomain, allowedPaths)
