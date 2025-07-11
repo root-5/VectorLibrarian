@@ -22,6 +22,7 @@ func main() {
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
 		"/prsite/",
 	}
+	maxScrapeDepth := 10       // 最大スクレイピング深度を設定
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
@@ -56,7 +57,7 @@ func main() {
 	// デフォルトのコレクターを作成
 	c := colly.NewCollector(
 		colly.AllowedDomains(targetDomain), // 許可するドメインを設定
-		colly.MaxDepth(2),                  // 最大深度を 2 に設定
+		colly.MaxDepth(maxScrapeDepth),     // 最大深度を設定
 		colly.CacheDir(collyCacheDir),      // キャッシュディレクトリを指定
 		// colly.Async(true),                  // 非同期モードを有効にする
 		// colly.IgnoreRobotsTxt(),            // robots.txt を無視
