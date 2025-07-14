@@ -5,10 +5,6 @@
 - [ ] ベクトル化と検索のテスト
   - [ ] ベクトル化のためのライブラリ？Postgres拡張？を選定
   - [ ] 精度・計算資源の検証
-- [ ] コントローラーを本格化
-  - [ ] HTML ハッシュの利用
-- [ ] フォーマルな形に再構成
-  - [ ] DB の型やカラムを適切なものに修正
 - [ ] 本番環境構築
   - [ ] GCP 初期設定？
   - [ ] Terraform での構築？
@@ -24,6 +20,7 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 - ORM の是非については諸説あるが、一旦 Bun を使ってみる
   - せっかくの個人プロジェクトなので一般的な Gorm ではなく、新しい ORM を採用してみた
   - 通常の Prisma 等は使ったことがあるので "SQL First" と謳っている Bun を使ってみて使用感を確かめたい
+- いろいろな自然言語周辺技術等調べていて思ったが、とてもじゃないがライブラリ使用を避けるのは難しい
 
 # 作業メモ
 ## コマンド
@@ -49,6 +46,13 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 - `docker compose exec db sh`: 開発環境コンテナ内でシェルを開く
   - `psql -U user -d db`: PostgreSQL に接続
   - `SELECT * FROM pages;`: データベースの内容を確認
+
+## TablePlus
+### バックアップ作成
+1. 全データを選択して右クリックを押下
+2. 「Export」を選択
+3. 「Export as SQL」を選択
+4. 「Export」を選択
 
 ## Bun 関連のメモ
 [モデル定義](https://bun.uptrace.dev/guide/models.html)
