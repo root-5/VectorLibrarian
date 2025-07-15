@@ -21,6 +21,9 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
   - せっかくの個人プロジェクトなので一般的な Gorm ではなく、新しい ORM を採用してみた
   - 通常の Prisma 等は使ったことがあるので "SQL First" と謳っている Bun を使ってみて使用感を確かめたい
 - いろいろな自然言語周辺技術等調べていて思ったが、とてもじゃないがライブラリ使用を避けるのは難しい
+- 改善案
+  - 「手続き」「申請」「暮らし」「補助金」等を含まれるページを優先してクローリング
+  - 「〇〇県〇〇市の～についての～」のようなテンプレートに当て込んでのベクトル化
 
 # 作業メモ
 ## コマンド
@@ -46,17 +49,3 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 - `docker compose exec db sh`: 開発環境コンテナ内でシェルを開く
   - `psql -U user -d db`: PostgreSQL に接続
   - `SELECT * FROM pages;`: データベースの内容を確認
-
-## TablePlus
-### バックアップ作成
-1. 全データを選択して右クリックを押下
-2. 「Export」を選択
-3. 「Export as SQL」を選択
-4. 「Export」を選択
-
-## Bun 関連のメモ
-[モデル定義](https://bun.uptrace.dev/guide/models.html)
-[使用例](https://github.com/uptrace/bun/tree/master/example)
-
-- プライマリキー、複合ユニークに指定したカラムは自動的にインデックスが張られる
-- 型を指定しない全て VACHAR になるので注意、モデルの構造体定義時に一緒に指定する
