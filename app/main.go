@@ -18,7 +18,7 @@ func main() {
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
 		"/prsite/",
 	}
-	maxScrapeDepth := 10       // 最大スクレイピング深度を設定
+	maxScrapeDepth := 8        // 最大スクレイピング深度を設定
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
