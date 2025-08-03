@@ -57,6 +57,8 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 10. `go get github.com/uptrace/bun/driver/pgdriver`: PostgreSQL ドライバのインストール
 11. `go mod tidy`: 依存関係の整理、便宜上最後のコマンドとして記載しているがライブラリのインストール後に適宜実行した
 
+1. `uv init`: uv の初期化
+
 ## Docker 関係コマンド
 - `docker compose up -d`: 開発環境コンテナの起動
 - `docker compose down`: 開発環境コンテナの停止
