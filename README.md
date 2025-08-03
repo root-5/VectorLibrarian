@@ -6,6 +6,8 @@
 - [ ] ベクトル化と検索のテスト
   - [ ] ベクトル化のためのライブラリ？Postgres拡張？を選定
   - [ ] 精度・計算資源の検証
+- [ ] nlp に APIを実装
+  - [ ] ベクトル化の API
 - [ ] 本番環境構築
   - [ ] GCP 初期設定？
   - [ ] Terraform での構築？
@@ -60,9 +62,10 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 ### nlp
 1. `uv init`: uv の初期化
 2. `uv add --dev ruff`: ruff の追加（開発用）
-3. `uv run main.py`: main.py の実行
-4. `uv run ruff check .`: ruff でコードチェック
-5. `uv run ruff format .`: ruff でコードフォーマット
+3. `uv add  uv add sentence-transformers`: sentence-transformers の追加
+4. `uv run main.py`: main.py の実行
+5. `uv run ruff check .`: ruff でコードチェック
+6. `uv run ruff format .`: ruff でコードフォーマット
 
 ## Docker 関係コマンド
 - `docker compose up -d`: 開発環境コンテナの起動
@@ -82,4 +85,3 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 ### nlp
 - `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く
 - `docker compose exec nlp python main.py`: NLP コンテナ内で Python スクリプトを実行
-- 
