@@ -94,10 +94,15 @@ func GetLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string
 		return "", false
 	}
 	// 特定のパス以外をスキップ
+	matched := false
 	for _, allowedPath := range allowedPaths {
-		if !strings.Contains(link, allowedPath) {
-			return "", false
+		if strings.Contains(link, allowedPath) {
+			matched = true
+			break
 		}
+	}
+	if !matched {
+		return "", false
 	}
 	formattedLink = link
 	isValid = true

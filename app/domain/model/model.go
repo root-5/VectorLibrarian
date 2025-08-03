@@ -29,7 +29,7 @@ type Page struct {
 }
 
 // 見出し情報
-type Chunk struct {
+type Heading struct {
 	bun.BaseModel `bun:"table:headings"`
 
 	Id           int64     `bun:"id,pk,autoincrement"`                                 // ID
@@ -44,7 +44,7 @@ type Chunk struct {
 // ベクトル情報
 // 一つの対象に複数モデルによって複数ベクトルが作られることが想定されるため、ベクトルのテーブルは独立しているべき
 type Embedding struct {
-	bun.BaseModel `bun:"table:headings"`
+	bun.BaseModel `bun:"table:embeddings"`
 
 	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	ChunkId   int64     `bun:"chunk_id,notnull,type:int"`                           // チャンクID
