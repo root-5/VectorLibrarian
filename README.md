@@ -1,5 +1,6 @@
 # VectorLibrarian
-文章をベクトル化して保存し、ベクトル検索とソース表示ができる API のテスト
+文章をベクトル化して保存し、ベクトル検索とソース表示ができる API のテスト。
+サブ目的として、AI技術を活用したシステム構築のテンプレート作成を目指す。
 
 ## タスク
 - [ ] ベクトル化と検索のテスト
@@ -19,6 +20,10 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 - 当面の主な対象は市役所等行政のホームページ
 
 ### 技術面
+- コンテナ構造
+  - app: フロントエンドへ提供する API や DB とのやり取りを行う Go で実装
+  - nlp: テキストデータの正規化、ベクトル化、検索を行う Python で実装
+  - db: PostgreSQL、ベクトルも含めて保存
 - ORM の是非については諸説あるが、一旦 Bun を使ってみる
   - せっかくの個人プロジェクトなので一般的な Gorm ではなく、新しい ORM を採用してみた
   - 通常の Prisma 等は使ったことがあるので "SQL First" と謳っている Bun を使ってみて使用感を確かめたい
@@ -58,6 +63,7 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 - `docker compose down --rmi all`: 開発環境コンテナの停止とイメージの削除
 - `docker compose exec app sh`: 開発環境コンテナ内でシェルを開く
 - `docker compose exec app go run main.go`: 開発環境コンテナ内でアプリケーションを実行
-- `docker compose exec db sh`: 開発環境コンテナ内でシェルを開く
-  - `psql -U user -d db`: PostgreSQL に接続
+- `docker compose exec db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'`: 開発環境コンテナ内で PostgreSQL に接続
   - `SELECT * FROM pages;`: データベースの内容を確認
+- `docker compose exec db sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backup/backup.sql'`: データベースのバックアップを取得
+- `docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB < /backup/backup.sql'`: データベースのバックアップを復元
