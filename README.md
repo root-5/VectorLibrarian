@@ -43,8 +43,8 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 句読点の統一（例：，→、や．→。）
 
 # 作業メモ
-## コマンド
-### 実行コマンドメモ
+## 実行コマンドメモ
+### app
 1. `go mod init github.com/root-5/VectorLibrarian`: モジュールの初期化
 2. `go get github.com/gocolly/colly/v2`: クローリングライブラリのインストール
 3. `go run main.go`: アプリケーションの実行
@@ -57,7 +57,12 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 10. `go get github.com/uptrace/bun/driver/pgdriver`: PostgreSQL ドライバのインストール
 11. `go mod tidy`: 依存関係の整理、便宜上最後のコマンドとして記載しているがライブラリのインストール後に適宜実行した
 
+### nlp
 1. `uv init`: uv の初期化
+2. `uv add --dev ruff`: ruff の追加（開発用）
+3. `uv run main.py`: main.py の実行
+4. `uv run ruff check .`: ruff でコードチェック
+5. `uv run ruff format .`: ruff でコードフォーマット
 
 ## Docker 関係コマンド
 - `docker compose up -d`: 開発環境コンテナの起動
