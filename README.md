@@ -57,13 +57,22 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 10. `go get github.com/uptrace/bun/driver/pgdriver`: PostgreSQL ドライバのインストール
 11. `go mod tidy`: 依存関係の整理、便宜上最後のコマンドとして記載しているがライブラリのインストール後に適宜実行した
 
-### Docker 関係
+## Docker 関係コマンド
 - `docker compose up -d`: 開発環境コンテナの起動
 - `docker compose down`: 開発環境コンテナの停止
 - `docker compose down --rmi all`: 開発環境コンテナの停止とイメージの削除
+
+### app
 - `docker compose exec app sh`: 開発環境コンテナ内でシェルを開く
 - `docker compose exec app go run main.go`: 開発環境コンテナ内でアプリケーションを実行
+
+### db
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'`: 開発環境コンテナ内で PostgreSQL に接続
   - `SELECT * FROM pages;`: データベースの内容を確認
 - `docker compose exec db sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backup/backup.sql'`: データベースのバックアップを取得
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB < /backup/backup.sql'`: データベースのバックアップを復元
+
+### nlp
+- `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く
+- `docker compose exec nlp python main.py`: NLP コンテナ内で Python スクリプトを実行
+- 
