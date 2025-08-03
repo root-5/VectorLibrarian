@@ -2,11 +2,10 @@ FROM golang:1.24.4-alpine
 
 WORKDIR /app
 
-COPY app/go.mod app/go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
-COPY app/ ./
-
+# 何もせずコンテナを起動する
 CMD ["tail", "-f", "/dev/null"]
 
 # RUN go install github.com/air-verse/air@latest
