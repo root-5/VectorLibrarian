@@ -66,6 +66,8 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 4. `uv add onnx`: onnx の追加
 5. `uv add onnxruntime`: onnxruntime の追加
 6. `uv run main.py`: main.py の実行
+7. `go mod init github.com/root-5/VectorLibrarian/nlp`: モジュールの初期化
+8. `go get github.com/owulveryck/onnx-go`: ONNX Runtime Go ライブラリのインストール
 
 ## Docker 関係コマンド
 - `docker compose up -d`: 開発環境コンテナの起動
