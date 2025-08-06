@@ -29,4 +29,7 @@ func main() {
 	}
 
 	fmt.Println("ONNXモデルが正常に読み込まれました!")
+
+	// github.com/sugarme/tokenizer 等を使用してトークン化していけば可能そうではあるものの
+	// 理解が難しく、改良も難しいため nlp の golang 化は一旦諦め
 }
