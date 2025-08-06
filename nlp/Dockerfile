@@ -15,4 +15,13 @@ RUN apt-get update && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
+# 依存関係ファイルをコピー
+COPY pyproject.toml uv.lock ./
+
+# 依存関係を同期（この段階で全パッケージがインストールされる）
+RUN uv sync --frozen
+
+# uvicornのインストール
+RUN uv tool install "uvicorn[standard]"
+
 CMD ["tail", "-f", "/dev/null"]

@@ -62,10 +62,12 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 ### nlp
 1. `uv init`: uv の初期化
 2. `uv add --dev ruff`: ruff の追加（開発用）
-3. `uv add  uv add sentence-transformers`: sentence-transformers の追加
+3. `uv add sentence-transformers`: sentence-transformers の追加
 4. `uv run main.py`: main.py の実行
 5. `uv run ruff check .`: ruff でコードチェック
 6. `uv run ruff format .`: ruff でコードフォーマット
+7. `uv add fastapi`: fastapi の追加
+8. `uv tool install "uvicorn[standard]"`: uvicorn のインストール
 
 ## Docker 関係コマンド
 - `docker compose up -d`: 開発環境コンテナの起動
@@ -84,4 +86,5 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 
 ### nlp
 - `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く
-- `docker compose exec nlp python main.py`: NLP コンテナ内で Python スクリプトを実行
+- `docker compose exec nlp uv run main.py`: NLP コンテナ内で uv を使って main.py を実行
+- `docker compose exec nlp uv run uvicorn main:app --reload`: ホットリロードを有効にして FastAPI アプリケーションを実行
