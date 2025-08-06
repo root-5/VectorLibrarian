@@ -4,18 +4,13 @@
 
 ## DEFAULT CURRENT_TIMESTAMP
 
-はい、created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP の場合、
-新規挿入時のみ自動で現在時刻が入ります。
-created_at は「INSERT時のみ」自動セットされ、UPDATE では自動的に変更されません。
+`~ TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP` の場合、新規挿入時のみ自動で現在時刻が入る。
+「INSERT時のみ」自動セットされ、UPDATE では自動的に変更されないので、 `created_at` は通常問題ないが、
+`updated_at` はアプリ側で明示的に `SET updated_at = CURRENT_TIMESTAMP` を指定する必要がある。
 
-一方、updated_at も DEFAULT CURRENT_TIMESTAMP だと「INSERT時のみ」自動セットされますが、
-UPDATE時に自動で更新するには、アプリ側で明示的に updated_at = CURRENT_TIMESTAMP を指定する必要があります。
+## DB のトリガー
 
-**まとめ**
-created_at の DEFAULT CURRENT_TIMESTAMP は通常問題ありません（UPDATE時に自動で変わることはありません）。
-updated_at はUPDATE時にアプリ側で SET updated_at = CURRENT_TIMESTAMP するのが一般的です。
-DEFAULT がついていても、UPDATE時に自動で値が変わることはありません。
-（PostgreSQLのトリガー等を使えば自動更新も可能ですが、SQL定義だけでは自動更新されません。）
+データベースにはトリガーと呼ばれる機能があり、特定のイベント（INSERT、UPDATE、DELETEなど）が発生したときに自動的に実行される処理を定義できます。
 
 ## ORM の効果
 
