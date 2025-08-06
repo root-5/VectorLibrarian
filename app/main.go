@@ -81,6 +81,24 @@ func main() {
 		// テキスト正規化
 
 		// チャンク化
+
+		// ベクトル化 nlp サーバーに GET リクエストを送信
+		// log.Info("NLP サーバーにリクエストを送信: " + fmt.Sprintf("http://nlp:8000/convert/%s", "てすと"))
+		// text := "てすと"
+		// vector, err := http.Get("http://" + os.Getenv("NLP_HOST") + ":8000/convert/" + text)
+		// if err != nil {
+		// 	log.Error(fmt.Errorf("NLP サーバーへのリクエストに失敗: %w", err))
+		// 	return
+		// }
+		// defer vector.Body.Close()
+		// log.Info("NLP サーバーからのレスポンス: " + vector.Status)
+		// // json 解析して、中身を一覧
+		// var result map[string]interface{}
+		// if err := json.NewDecoder(vector.Body).Decode(&result); err != nil {
+		// 	log.Error(fmt.Errorf("NLP サーバーからのレスポンスの解析に失敗: %w", err))
+		// 	return
+		// }
+		// log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result))
 	})
 
 	// a タグを見つけたときの処理

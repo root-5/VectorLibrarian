@@ -14,8 +14,6 @@ services:
       context: ./nlp
     container_name: nlp_dev
     env_file: ./nlp/.env
-    ports:
-      - "8000:8000"
     volumes:
       - ./nlp:/nlp
     depends_on:
