@@ -1,6 +1,6 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer, util
-from fastapi import FastAPI, Query
-from typing import Optional
 import neologdn
 
 # グローバル変数でモデルを管理
@@ -9,6 +9,11 @@ model_name = "paraphrase-multilingual-MiniLM-L12-v2"
 
 # FastAPIのインスタンスを作成
 app = FastAPI()
+
+# リクエストボディ用のPydanticモデル
+class ConvertRequest(BaseModel):
+    text: str
+    is_query: bool = True
 
 # =====================================================
 # ルーティング
@@ -25,15 +30,15 @@ async def startup_event():
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/convert")
-def convert_text(text: str, is_query: bool = True):
+@app.post("/convert")
+def convert(request: ConvertRequest):
     """ テキストをベクトルに変換するエンドポイント """
-    normalized_text = normalize_text(text)  # テキストを正規化
-    vector = convert_to_vector(normalized_text, is_query)  # ベクトルに変換
+    normalized_text = normalize_text(request.text)  # テキストを正規化
+    vector = convert_to_vector(normalized_text, request.is_query)  # ベクトルに変換
     return {
-        "input_text": normalized_text,
+        "input_text": request.text,
         "normalized_text": normalized_text,
-        "is_query": is_query,
+        "is_query": request.is_query,
         "model_name": model_name,
         "dimensions": len(vector),
         "vector": vector.tolist(),  # numpy配列をリストに変換

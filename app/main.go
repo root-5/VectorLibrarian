@@ -4,11 +4,22 @@ import (
 	"app/controller/log"
 	"app/controller/postgres"
 	"app/usecase/processor"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/gocolly/colly/v2"
 	_ "github.com/lib/pq"
 )
+
+// NLPサーバーへのリクエスト用の構造体
+type ConvertRequest struct {
+	Text    string `json:"text"`
+	IsQuery bool   `json:"is_query"`
+}
 
 func main() {
 	// =======================================================================
@@ -18,7 +29,7 @@ func main() {
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
 		"/prsite/",
 	}
-	maxScrapeDepth := 15       // 最大スクレイピング深度を設定
+	maxScrapeDepth := 1       // 最大スクレイピング深度を設定
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
@@ -69,7 +80,7 @@ func main() {
 			return
 		}
 		if exists {
-			return // 既に保存されているハッシュがあればスキップ
+			// return // 既に保存されているハッシュがあればスキップ
 		}
 
 		// ページデータをデータベースに保存
@@ -82,23 +93,13 @@ func main() {
 
 		// チャンク化
 
-		// ベクトル化 nlp サーバーに GET リクエストを送信
-		// log.Info("NLP サーバーにリクエストを送信: " + fmt.Sprintf("http://nlp:8000/convert/%s", "てすと"))
-		// text := "てすと"
-		// vector, err := http.Get("http://" + os.Getenv("NLP_HOST") + ":8000/convert/" + text)
-		// if err != nil {
-		// 	log.Error(fmt.Errorf("NLP サーバーへのリクエストに失敗: %w", err))
-		// 	return
-		// }
-		// defer vector.Body.Close()
-		// log.Info("NLP サーバーからのレスポンス: " + vector.Status)
-		// // json 解析して、中身を一覧
-		// var result map[string]interface{}
-		// if err := json.NewDecoder(vector.Body).Decode(&result); err != nil {
-		// 	log.Error(fmt.Errorf("NLP サーバーからのレスポンスの解析に失敗: %w", err))
-		// 	return
-		// }
-		// log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result))
+		// ベクトル化
+		result, err := requestNlpServer(markdown, false)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result["vector"]))
 	})
 
 	// a タグを見つけたときの処理
@@ -115,4 +116,35 @@ func main() {
 
 	// 指定ドメインからスクレイピングを開始
 	c.Visit("https://" + targetDomain + "/")
+}
+
+func requestNlpServer(text string, isQuery bool) (map[string]interface{}, error) {
+	// リクエストボディを作成
+	requestBody := ConvertRequest{
+		Text:    text,
+		IsQuery: isQuery,
+	}
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, fmt.Errorf("JSONエンコードに失敗: %w", err)
+	}
+
+	// POSTリクエストを送信
+	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":8000/convert", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("NLP サーバーへのリクエストに失敗: %w", err)
+	}
+	defer resp.Body.Close()
+
+	log.Info("NLP request: " + resp.Status)
+
+	// JSON解析して中身を一覧
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("NLP サーバーからのレスポンスの解析に失敗: %w", err)
+	}
+	// log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result))
+
+	return result, nil
 }
