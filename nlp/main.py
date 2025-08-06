@@ -1,12 +1,20 @@
 from sentence_transformers import SentenceTransformer, util
 from fastapi import FastAPI
 
-# グローバルでモデルを初期化（関数呼び出しのたびに読み込まないため）
+# グローバル変数でモデルを管理
+model = None
 model_name = "paraphrase-multilingual-MiniLM-L12-v2"
-model = SentenceTransformer(model_name)
 
 # FastAPIのインスタンスを作成
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    """アプリケーション起動時にモデルを初期化"""
+    global model
+    print(f"Loading model: {model_name}")
+    model = SentenceTransformer(model_name)
+    print("Model loaded successfully!")
 
 @app.get("/")
 def read_root():
@@ -41,14 +49,3 @@ def convert_to_vector(input_text: str, is_query: bool = True):
     print(vector)
 
     return vector
-
-def main():
-    # テスト用の入力
-    input_text = "こんにちは"
-    vector = convert_to_vector(input_text)
-    print(f"Input: {input_text}\nVector: {vector}")
-
-if __name__ == "__main__":
-    main()
-    # FastAPIのサーバーを起動するためのコマンドは、uvicornを使用して実行すること
-    # 例: uvicorn main:app --reload --host

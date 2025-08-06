@@ -21,7 +21,4 @@ COPY pyproject.toml uv.lock ./
 # 依存関係を同期（この段階で全パッケージがインストールされる）
 RUN uv sync --frozen
 
-# uvicornのインストール
-RUN uv tool install "uvicorn[standard]"
-
 CMD ["tail", "-f", "/dev/null"]
