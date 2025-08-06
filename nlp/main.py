@@ -1,13 +1,29 @@
 from sentence_transformers import SentenceTransformer, util
 
+# グローバルでモデルを初期化（関数呼び出しのたびに読み込まないため）
+model_name = "paraphrase-multilingual-MiniLM-L12-v2"
+model = SentenceTransformer(model_name)
+
+def convertToVector(inputText, isQuery=True):
+    """
+    テキストをベクトルに変換する関数
+    
+    Args:
+        inputText (str): ベクトル化するテキスト
+        isQuery (bool): クエリかどうか（True: クエリ, False: ドキュメント）
+    
+    Returns:
+        numpy.ndarray: 正規化されたベクトル（384次元）
+    """
+    if isQuery:
+        prefix = "query: "
+    else:
+        prefix = "passage: "
+    
+    vector = model.encode(prefix + inputText, normalize_embeddings=True)
+    return vector
+
 def main():
-
-    # モデルのロード（ローカルにダウンロードされ、キャッシュされる）
-    # AI 曰く、日本語対応かつ軽量なモデル（少し古いモデルらしい）
-    # 確かに GPU なしのハイエンドノート PC 程度でも動いた。
-    model_name = "paraphrase-multilingual-MiniLM-L12-v2"
-    model = SentenceTransformer(model_name)
-
     # サンプルのドキュメント群（チャンキング後の文章を想定）
     documents = [
         "犬の健康管理について詳しく書かれたページです。",
@@ -19,13 +35,9 @@ def main():
     # ユーザーの検索語句（例）
     query = "ドッグランのルールを知りたい"
 
-    # ベクトル化
-    # query や documents はプレフィックスといい、これをつけることで多くの現代的なモデルにおいてより良い結果が得られる。
-    # 理由はモデルが文脈をより正確に理解できること、最近のモデルでは学習時にプレフィックスを使用していることが多いから。
-    query_embedding = model.encode("query: " + query, normalize_embeddings=True)
-    # print("🔍 クエリのベクトル化:", query_embedding)  # 結果は 384 次元のベクトル
-    doc_embeddings = model.encode(["passage: " + d for d in documents], normalize_embeddings=True)
-    # print("📄 ドキュメントのベクトル化:", doc_embeddings)
+    # ベクトル化（関数を使用）
+    query_embedding = convertToVector(query, isQuery=True)
+    doc_embeddings = [convertToVector(doc, isQuery=False) for doc in documents]
 
     # コサイン類似度の計算
     cos_scores = util.cos_sim(query_embedding, doc_embeddings)[0]
@@ -41,5 +53,6 @@ def main():
     for idx, score in top_results:
         print(f"  [score={score:.4f}] {documents[idx]}")
 
-
-main()
+# 直接実行された場合のみmainを呼び出す
+if __name__ == "__main__":
+    main()
