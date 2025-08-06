@@ -2,34 +2,14 @@ package main
 
 import (
 	"app/controller/log"
+	"app/controller/nlp"
 	"app/controller/postgres"
 	"app/usecase/processor"
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
 	"time"
 
 	"github.com/gocolly/colly/v2"
 	_ "github.com/lib/pq"
 )
-
-// NLPサーバーへのリクエスト用の構造体
-type ConvertRequest struct {
-	Text    string `json:"text"`
-	IsQuery bool   `json:"is_query"`
-}
-
-// NLPサーバーからのレスポンス用の構造体
-type ConvertResponse struct {
-	InputText      string    `json:"input_text"`
-	NormalizedText string    `json:"normalized_text"`
-	IsQuery        bool      `json:"is_query"`
-	ModelName      string    `json:"model_name"`
-	Dimensions     int       `json:"dimensions"`
-	Vector         []float32 `json:"vector"`
-}
 
 func main() {
 	// =======================================================================
@@ -90,7 +70,14 @@ func main() {
 			return
 		}
 		if exists {
-			// return // 既に保存されているハッシュがあればスキップ
+			return // 既に保存されているハッシュがあればスキップ
+		}
+
+		// テキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
+		vector, err := nlp.ConvertToVector(markdown, false)
+		if err != nil {
+			log.Error(err)
+			return
 		}
 
 		// ページデータをデータベースに保存
@@ -99,17 +86,8 @@ func main() {
 			return
 		}
 
-		// テキスト正規化
-
 		// チャンク化
 
-		// ベクトル化
-		result, err := requestNlpServer(markdown, false)
-		if err != nil {
-			log.Error(err)
-			return
-		}
-		log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result.Vector))
 	})
 
 	// a タグを見つけたときの処理
@@ -126,34 +104,4 @@ func main() {
 
 	// 指定ドメインからスクレイピングを開始
 	c.Visit("https://" + targetDomain + "/")
-}
-
-func requestNlpServer(text string, isQuery bool) (*ConvertResponse, error) {
-	// リクエストボディを作成
-	requestBody := ConvertRequest{
-		Text:    text,
-		IsQuery: isQuery,
-	}
-
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, fmt.Errorf("JSONエンコードに失敗: %w", err)
-	}
-
-	// POSTリクエストを送信
-	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":8000/convert", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, fmt.Errorf("NLP サーバーへのリクエストに失敗: %w", err)
-	}
-	defer resp.Body.Close()
-
-	log.Info("NLP request: " + resp.Status)
-
-	// 構造体に直接デコード
-	var result ConvertResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("NLP サーバーからのレスポンスの解析に失敗: %w", err)
-	}
-
-	return &result, nil
 }
