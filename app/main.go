@@ -21,6 +21,16 @@ type ConvertRequest struct {
 	IsQuery bool   `json:"is_query"`
 }
 
+// NLPサーバーからのレスポンス用の構造体
+type ConvertResponse struct {
+	InputText      string    `json:"input_text"`
+	NormalizedText string    `json:"normalized_text"`
+	IsQuery        bool      `json:"is_query"`
+	ModelName      string    `json:"model_name"`
+	Dimensions     int       `json:"dimensions"`
+	Vector         []float32 `json:"vector"`
+}
+
 func main() {
 	// =======================================================================
 	// 初期設定・定数
@@ -29,7 +39,7 @@ func main() {
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
 		"/prsite/",
 	}
-	maxScrapeDepth := 1       // 最大スクレイピング深度を設定
+	maxScrapeDepth := 1        // 最大スクレイピング深度を設定
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
@@ -80,7 +90,7 @@ func main() {
 			return
 		}
 		if exists {
-			return // 既に保存されているハッシュがあればスキップ
+			// return // 既に保存されているハッシュがあればスキップ
 		}
 
 		// ページデータをデータベースに保存
@@ -99,7 +109,7 @@ func main() {
 			log.Error(err)
 			return
 		}
-		log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result["vector"]))
+		log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result.Vector))
 	})
 
 	// a タグを見つけたときの処理
@@ -118,7 +128,7 @@ func main() {
 	c.Visit("https://" + targetDomain + "/")
 }
 
-func requestNlpServer(text string, isQuery bool) (map[string]interface{}, error) {
+func requestNlpServer(text string, isQuery bool) (*ConvertResponse, error) {
 	// リクエストボディを作成
 	requestBody := ConvertRequest{
 		Text:    text,
@@ -139,12 +149,11 @@ func requestNlpServer(text string, isQuery bool) (map[string]interface{}, error)
 
 	log.Info("NLP request: " + resp.Status)
 
-	// JSON解析して中身を一覧
-	var result map[string]interface{}
+	// 構造体に直接デコード
+	var result ConvertResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("NLP サーバーからのレスポンスの解析に失敗: %w", err)
 	}
-	// log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result))
 
-	return result, nil
+	return &result, nil
 }
