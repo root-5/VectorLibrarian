@@ -98,7 +98,7 @@ func main() {
 	// a タグを見つけたときの処理
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// URL を取得
-		url, isValid := processor.ValidateAndFormatLinkUr(e, targetDomain, allowedPaths)
+		url, isValid := processor.ValidateAndFormatLinkUrl(e, targetDomain, allowedPaths)
 		if !isValid {
 			return // 無効なリンクはスキップ
 		}
