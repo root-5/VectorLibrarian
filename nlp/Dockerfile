@@ -22,3 +22,4 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen
 
 CMD ["tail", "-f", "/dev/null"]
+# CMD ["uv", "run", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0"]
