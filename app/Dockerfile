@@ -2,14 +2,13 @@ FROM golang:1.24.4-alpine
 
 WORKDIR /app
 
-# おまじない
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
+# おまじない (Alpine用)
+RUN apk update && \
+    apk add --no-cache \
+    build-base \
     git \
     curl \
-    coreutils \
-    && rm -rf /var/lib/apt/lists/*
+    coreutils
 
 COPY go.mod go.sum ./
 RUN go mod download
