@@ -234,6 +234,18 @@ wheels = [
 ]
 
 [[package]]
+name = "neologdn"
+version = "0.5.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/74/72/85e22c60db1373df01e8f769b7aa9c58c923a94b5321f1a6353a052e279f/neologdn-0.5.4.tar.gz", hash = "sha256:bd4d7c1e9ecf46c3b7692512ecf73d764290c7a2ccd0d462e6c5dbbc990d7c67", size = 96962, upload-time = "2025-03-15T14:33:43.198Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2c/7f/60474b7a056228e050ee626fc50b90e6a145a4371474aa2dcffb484e51fd/neologdn-0.5.4-cp313-cp313-win32.whl", hash = "sha256:6e71e1e8c9d06007b6cca9882aca4d8ef7215f401903179ddb88d44860468bc9", size = 47979, upload-time = "2025-03-15T14:33:33.261Z" },
+    { url = "https://files.pythonhosted.org/packages/10/e0/fbcd0f652aacf8359832d2f4feea713a408fbdc0c319f79c3f3969c73acd/neologdn-0.5.4-cp313-cp313-win_amd64.whl", hash = "sha256:0339da8ab4c8a46dceefdbca6b201433e1d5ad6f17853417624edc795e5c4e8a", size = 52117, upload-time = "2025-03-15T14:33:34.696Z" },
+    { url = "https://files.pythonhosted.org/packages/31/db/140ef53857b7e156eaab60f48238769f82d78a4e09e41607169af636edc6/neologdn-0.5.4-cp313-cp313t-win32.whl", hash = "sha256:3bc67b6df2974e37a1a781db01918df2e17a7c0440b39f0efa81ee2093df631a", size = 50122, upload-time = "2025-03-15T14:33:36.027Z" },
+    { url = "https://files.pythonhosted.org/packages/40/0e/84eca160935e9ed29fdd36c161abd9e89d987f1e69f585570217593ab70f/neologdn-0.5.4-cp313-cp313t-win_amd64.whl", hash = "sha256:cc584f4ace734bf056103ed2410fdf49edc6f3cc2068aefcf81e18c2967f8455", size = 55023, upload-time = "2025-03-15T14:33:37.46Z" },
+]
+
+[[package]]
 name = "networkx"
 version = "3.5"
 source = { registry = "https://pypi.org/simple" }
@@ -248,6 +260,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "neologdn" },
     { name = "sentence-transformers" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -260,6 +273,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
+    { name = "neologdn", specifier = ">=0.5.4" },
     { name = "sentence-transformers", specifier = ">=5.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0" },
 ]

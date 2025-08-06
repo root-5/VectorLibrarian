@@ -1,5 +1,7 @@
 from sentence_transformers import SentenceTransformer, util
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+from typing import Optional
+import neologdn
 
 # グローバル変数でモデルを管理
 model = None
@@ -23,18 +25,35 @@ async def startup_event():
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/convert/{input_text}")
-def convert_text(input_text: str):
-    vector = convert_to_vector(input_text)
+@app.get("/convert")
+def convert_text(text: str, is_query: bool = True):
+    """ テキストをベクトルに変換するエンドポイント """
+    normalized_text = normalize_text(text)  # テキストを正規化
+    vector = convert_to_vector(normalized_text, is_query)  # ベクトルに変換
     return {
-        "input_text": input_text,
+        "input_text": normalized_text,
+        "normalized_text": normalized_text,
+        "is_query": is_query,
+        "model_name": model_name,
+        "dimensions": len(vector),
         "vector": vector.tolist(),  # numpy配列をリストに変換
-        "dimensions": len(vector)
     }
 
 # =====================================================
-# ベクトル化関数
+# 処理関数
 # =====================================================
+def normalize_text(text: str) -> str:
+    """
+    テキストを正規化する関数
+    
+    Args:
+        text (str): 正規化するテキスト
+
+    Returns:
+        str: 正規化されたテキスト
+    """
+    return neologdn.normalize(text)
+
 def convert_to_vector(input_text: str, is_query: bool = True):
     """
     テキストをベクトルに変換する関数
