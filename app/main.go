@@ -17,9 +17,9 @@ func main() {
 	// =======================================================================
 	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
-		"/prsite/",
+		"/prsite/", // テスト用に PR サイトのみ対象に
 	}
-	maxScrapeDepth := 1        // 最大スクレイピング深度を設定
+	maxScrapeDepth := 10       // 最大スクレイピング深度を設定
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
@@ -93,7 +93,7 @@ func main() {
 	// a タグを見つけたときの処理
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// URL を取得
-		url, isValid := processor.GetLinkUrl(e, targetDomain, allowedPaths)
+		url, isValid := processor.ValidateAndFormatLinkUr(e, targetDomain, allowedPaths)
 		if !isValid {
 			return // 無効なリンクはスキップ
 		}

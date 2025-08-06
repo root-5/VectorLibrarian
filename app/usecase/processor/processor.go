@@ -73,8 +73,8 @@ func HtmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description,
 	return domain, path, pageTitle, description, keywords, markdown, hash, nil
 }
 
-// GetLinkUrl は URL パスを検証し、必要に応じてフォーマットを行う
-func GetLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string) (formattedLink string, isValid bool) {
+// ValidateAndFormatLinkUr は URL パスを検証し、必要に応じてフォーマットを行う
+func ValidateAndFormatLinkUr(e *colly.HTMLElement, targetDomain string, allowedPaths []string) (formattedLink string, isValid bool) {
 	link := e.Attr("href")
 
 	// .pdf で終わるリンク、mailto:/javascript:/# 始まるリンク、空のリンクはスキップ
