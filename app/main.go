@@ -69,15 +69,20 @@ func main() {
 			log.Error(err)
 			return
 		}
+
 		if exists {
 			return // 既に保存されているハッシュがあればスキップ
 		}
 
 		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
 		itemization := processor.ExtractHeadings(markdown)
+		targetText := "## page title\n\n" + pageTitle +
+			// "\n\n## page description\n\n" + description +
+			// "\n\n## page keywords\n\n" + keywords +
+			"\n\n## page itemization\n\n" + itemization
 
 		// 箇条書きをテキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
-		vector, err := nlp.ConvertToVector(itemization, false)
+		vector, err := nlp.ConvertToVector(targetText, false)
 		if err != nil {
 			log.Error(err)
 			return

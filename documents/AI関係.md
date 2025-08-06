@@ -38,6 +38,29 @@ PostgreSQL の拡張で、ベクトルデータを扱えるようにするもの
 基本的には以下のサイトを参考にした。alpine 指定によると思われるえらーは AI に聞いて解決した。
 [参考](https://qiita.com/naozo-se/items/0730c8ea650eaa0d51c8)
 
+## ベクトル計算の負荷
+
+現状の `paraphrase-multilingual-MiniLM-L12-v2` モデルを利用した場合、ベクトル化の API のレスポンスはほぼなしといっていいレベル。
+
+```log
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/0000018548.html
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/category/14-4-3-0-0-0-0-0-0-0.html
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/0000017650.html
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/0000019185.html
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/0000019186.html
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/0000016876.html
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/0000017943.html
+2025-08-07 05:32:04     NLP request: 200 OK
+2025-08-07 05:32:04     >> URL:https://www.city.hamura.tokyo.jp/prsite/0000005991.html
+```
+
 ## 計算インフラを考慮したアーキテクチャ選定 3 パターン
 
 1. 通常の EC2, ECS 上で自然言語処理を行う（某インフラ構成と同様）
