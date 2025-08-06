@@ -73,8 +73,8 @@ func HtmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description,
 	return domain, path, pageTitle, description, keywords, markdown, hash, nil
 }
 
-// GetLinkUrl は URL パスを検証し、必要に応じてフォーマットを行う
-func GetLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string) (formattedLink string, isValid bool) {
+// ValidateAndFormatLinkUrl は URL パスを検証し、必要に応じてフォーマットを行う
+func ValidateAndFormatLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string) (formattedLink string, isValid bool) {
 	link := e.Attr("href")
 
 	// .pdf で終わるリンク、mailto:/javascript:/# 始まるリンク、空のリンクはスキップ
@@ -108,4 +108,21 @@ func GetLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string
 	isValid = true
 
 	return formattedLink, isValid
+}
+
+// ExtractHeadings はマークダウンから見出しを抽出し、箇条書き形式に変換する
+func ExtractHeadings(markdown string) string {
+	// 正規表現で見出しを抽出
+	re := regexp.MustCompile(`(?m)^(#{1,6})\s+(.*)$`)
+	matches := re.FindAllStringSubmatch(markdown, -1)
+
+	// 見出しを箇条書き形式に変換
+	var itemization []string
+	for _, match := range matches {
+		level := len(match[1])                                  // # の数でレベルを取得
+		item := strings.Repeat("  ", level-1) + "- " + match[2] // レベルに応じてインデント
+		itemization = append(itemization, item)
+	}
+
+	return strings.Join(itemization, "\n")
 }

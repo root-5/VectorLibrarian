@@ -20,7 +20,8 @@ services:
       - db
 
   db:
-    image: postgres:17-alpine
+    build:
+      context: ./db
     container_name: db_dev
     env_file: ./db/.env
     ports:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/controller/log"
+	"app/controller/nlp"
 	"app/controller/postgres"
 	"app/usecase/processor"
 	"time"
@@ -16,9 +17,9 @@ func main() {
 	// =======================================================================
 	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
-		"/prsite/",
+		"/prsite/", // テスト用に PR サイトのみ対象に
 	}
-	maxScrapeDepth := 15       // 最大スクレイピング深度を設定
+	maxScrapeDepth := 10       // 最大スクレイピング深度を設定
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// =======================================================================
@@ -68,43 +69,36 @@ func main() {
 			log.Error(err)
 			return
 		}
+
 		if exists {
 			return // 既に保存されているハッシュがあればスキップ
 		}
 
-		// ページデータをデータベースに保存
-		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash)
+		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
+		itemization := processor.ExtractHeadings(markdown)
+		targetText := "## page title\n\n" + pageTitle +
+			// "\n\n## page description\n\n" + description +
+			// "\n\n## page keywords\n\n" + keywords +
+			"\n\n## page itemization\n\n" + itemization
+
+		// 箇条書きをテキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
+		vector, err := nlp.ConvertToVector(targetText, false)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 
-		// テキスト正規化
-
-		// チャンク化
-
-		// ベクトル化 nlp サーバーに GET リクエストを送信
-		// log.Info("NLP サーバーにリクエストを送信: " + fmt.Sprintf("http://nlp:8000/convert/%s", "てすと"))
-		// text := "てすと"
-		// vector, err := http.Get("http://" + os.Getenv("NLP_HOST") + ":8000/convert/" + text)
-		// if err != nil {
-		// 	log.Error(fmt.Errorf("NLP サーバーへのリクエストに失敗: %w", err))
-		// 	return
-		// }
-		// defer vector.Body.Close()
-		// log.Info("NLP サーバーからのレスポンス: " + vector.Status)
-		// // json 解析して、中身を一覧
-		// var result map[string]interface{}
-		// if err := json.NewDecoder(vector.Body).Decode(&result); err != nil {
-		// 	log.Error(fmt.Errorf("NLP サーバーからのレスポンスの解析に失敗: %w", err))
-		// 	return
-		// }
-		// log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result))
+		// ページデータをデータベースに保存
+		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash, vector)
+		if err != nil {
+			return
+		}
 	})
 
 	// a タグを見つけたときの処理
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// URL を取得
-		url, isValid := processor.GetLinkUrl(e, targetDomain, allowedPaths)
+		url, isValid := processor.ValidateAndFormatLinkUrl(e, targetDomain, allowedPaths)
 		if !isValid {
 			return // 無効なリンクはスキップ
 		}
