@@ -37,7 +37,7 @@ DB にクロールしたデータを保存する関数
   - markdown		ページのマークダウンコンテンツ
   - return) err	エラー
 */
-func SaveCrawledData(domain, path, title, description, keywords, markdown, hash string) (err error) {
+func SaveCrawledData(domain, path, title, description, keywords, markdown, hash string, vector []float32) (err error) {
 	// 文字列の長さが制限を超えている場合は切り詰める
 	if len(domain) > 100 {
 		domain = domain[:100]
@@ -64,6 +64,7 @@ func SaveCrawledData(domain, path, title, description, keywords, markdown, hash 
 		Keywords:    keywords,
 		Markdown:    markdown,
 		Hash:        hash,
+		Vector:      vector,
 	}
 
 	// すでに存在する場合は更新、存在しない場合は新規挿入
@@ -75,6 +76,7 @@ func SaveCrawledData(domain, path, title, description, keywords, markdown, hash 
 		Set("keywords = ?", keywords).
 		Set("markdown = ?", markdown).
 		Set("hash = ?", hash).
+		Set("vector = ?", vector).
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(context.Background())
 	if err != nil {

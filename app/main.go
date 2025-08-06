@@ -73,21 +73,21 @@ func main() {
 			return // 既に保存されているハッシュがあればスキップ
 		}
 
-		// テキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
-		vector, err := nlp.ConvertToVector(markdown, false)
+		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
+		itemization := processor.ExtractHeadings(markdown)
+
+		// 箇条書きをテキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
+		vector, err := nlp.ConvertToVector(itemization, false)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
 		// ページデータをデータベースに保存
-		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash)
+		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash, vector)
 		if err != nil {
 			return
 		}
-
-		// チャンク化
-
 	})
 
 	// a タグを見つけたときの処理
