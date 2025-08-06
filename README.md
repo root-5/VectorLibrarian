@@ -87,4 +87,4 @@ https://chatgpt.com/share/6870edc4-82e0-8003-a163-ac64da6d19e5
 ### nlp
 - `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く
 - `docker compose exec nlp uv run main.py`: NLP コンテナ内で uv を使って main.py を実行
-- `docker compose exec nlp uv run uvicorn main:app --reload`: ホットリロードを有効にして FastAPI アプリケーションを実行
+- `docker compose exec nlp uv run uvicorn main:app --reload --host 0.0.0.0`: ホットリロードを有効にして FastAPI アプリケーションを実行
