@@ -8,7 +8,7 @@ import (
 )
 
 /*
-DB に同一のハッシュ値を持つページが存在するか確認する関数
+同一のハッシュ値を持つページが存在するか確認する関数
   - hash			確認するページのハッシュ値
   - return) exists	同一のハッシュ値を持つページが存在するかどうか
   - return) err		エラー
@@ -29,7 +29,7 @@ func CheckHashExists(hash string) (exists bool, err error) {
 }
 
 /*
-DB にクロールしたデータを保存する関数
+クロールしたページデータを保存する関数
   - url			クロールしたページの URL
   - title			ページのタイトル
   - description	ページの説明
