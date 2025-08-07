@@ -15,18 +15,18 @@ import (
 type Page struct {
 	bun.BaseModel `bun:"table:pages"`
 
-	Id          int64     `bun:"id,pk,autoincrement"`                                 // ID
-	Domain      string    `bun:"domain,notnull,unique:url,type:varchar(100)"`         // ドメイン
-	Path        string    `bun:"path,notnull,unique:url,type:varchar(255)"`           // パス
-	Title       string    `bun:"title,notnull,type:varchar(100)"`                     // ページタイトル
-	Description string    `bun:"description,notnull,type:varchar(255)"`               // ディスクリプション
-	Keywords    string    `bun:"keywords,notnull,type:varchar(255)"`                  // キーワード
-	Markdown    string    `bun:"markdown,notnull,type:text"`                          // Markdown コンテンツ
-	Hash        string    `bun:"hash,notnull,type:char(64)"`                          // コンテンツのハッシュ値
-	Vector      []float32 `bun:"vector,notnull,type:vector(384)"`                     // ベクトルデータ（モデルの次元数に合わせて変更）
-	CreatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
-	UpdatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
-	DeletedAt   time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
+	Id          int64     `bun:"id,pk,autoincrement" json:"-"`                                          // ID
+	Domain      string    `bun:"domain,notnull,unique:url,type:varchar(100)" json:"domain"`             // ドメイン
+	Path        string    `bun:"path,notnull,unique:url,type:varchar(255)" json:"path"`                 // パス
+	Title       string    `bun:"title,notnull,type:varchar(100)" json:"title"`                          // ページタイトル
+	Description string    `bun:"description,notnull,type:varchar(255)" json:"description"`              // ディスクリプション
+	Keywords    string    `bun:"keywords,notnull,type:varchar(255)" json:"keywords"`                    // キーワード
+	Markdown    string    `bun:"markdown,notnull,type:text" json:"markdown"`                            // Markdown コンテンツ
+	Hash        string    `bun:"hash,notnull,type:char(64)" json:"-"`                                   // コンテンツのハッシュ値
+	Vector      []float32 `bun:"vector,notnull,type:vector(384)" json:"-"`                              // ベクトルデータ（モデルの次元数に合わせて変更）
+	CreatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"-"`          // 作成日時
+	UpdatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"updated_at"` // 更新日時
+	DeletedAt   time.Time `bun:",soft_delete,type:timestamptz" json:"-"`                                // 削除日時
 }
 
 // 見出し情報

@@ -21,7 +21,6 @@ func GetSimilarPages(vector []float32, limit int) (pages []model.Page, err error
 
 	err = db.NewSelect().
 		Model(&pages).
-		Column("domain", "path", "title").
 		OrderExpr("vector <=> ?", vectorStr).
 		Limit(limit).
 		Scan(context.Background())
