@@ -5,18 +5,25 @@ import (
 	"app/controller/log"
 	"app/domain/model"
 	"context"
+	"fmt"
+	"strings"
 )
 
 /*
-ベクトルを入力して、コサイン類似度が上位10件までのデータを返却する関数
+ベクトルを入力して、コサイン類似度が上位のデータを指定の件数返却する関数
   - vector		入力するベクトル
-  - return)		コサイン類似度が上位10件までのページデータ
+  - limit		返却する件数
+  - return)		コサイン類似度が上位のページデータ
   - return) err	エラー
 */
-func GetTop10SimilarPages(vector []float32) (pages []model.Page, err error) {
+func GetSimilarPages(vector []float32, limit int) (pages []model.Page, err error) {
+	vectorStr := vectorToString(vector)
+
 	err = db.NewSelect().
 		Model(&pages).
-		Where("SELECT *, 1 - (vector <=> ?) AS similarity FROM pages ORDER BY similarity LIMIT 10", vector).
+		Column("domain", "path", "title").
+		OrderExpr("vector <=> ?", vectorStr).
+		Limit(limit).
 		Scan(context.Background())
 	if err != nil {
 		log.Error(err)
@@ -24,4 +31,13 @@ func GetTop10SimilarPages(vector []float32) (pages []model.Page, err error) {
 	}
 
 	return pages, nil
+}
+
+// float32スライスをPostgreSQLのベクトル形式の文字列に変換
+func vectorToString(vector []float32) string {
+	strSlice := make([]string, len(vector))
+	for i, v := range vector {
+		strSlice[i] = fmt.Sprintf("%g", v)
+	}
+	return "[" + strings.Join(strSlice, ",") + "]"
 }

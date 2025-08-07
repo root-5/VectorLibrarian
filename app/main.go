@@ -5,6 +5,7 @@ import (
 	"app/controller/nlp"
 	"app/controller/postgres"
 	"app/usecase/processor"
+	"fmt"
 	"time"
 
 	"github.com/gocolly/colly/v2"
@@ -33,6 +34,10 @@ func main() {
 	if err != nil {
 		return
 	}
+
+	// 検索テスト用の関数
+	searchTest()
+	return
 
 	// =======================================================================
 	// Colly のコレクターを作成
@@ -109,4 +114,25 @@ func main() {
 
 	// 指定ドメインからスクレイピングを開始
 	c.Visit("https://" + targetDomain + "/")
+}
+
+func searchTest() {
+	inputText := "保育園の選び方" // ユーザーからの入力テキスト
+	vector1, _ := nlp.ConvertToVector(inputText, false)
+	// log.Info(fmt.Sprintf("Vector: %v", vector1))
+
+	similarPages, err := postgres.GetSimilarPages(vector1, 20)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// similarPages のタイトルとパスをログに出力
+	if len(similarPages) == 0 {
+		log.Info("No similar pages found.")
+		return
+	}
+	for _, page := range similarPages {
+		log.Info(fmt.Sprintf("Title: %s, URL: %s%s", page.Title, page.Domain, page.Path))
+	}
 }
