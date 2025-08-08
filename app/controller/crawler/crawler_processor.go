@@ -1,4 +1,4 @@
-package processor
+package crawler
 
 import (
 	"app/controller/log"
@@ -14,8 +14,8 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-// HtmlToPageData は colly.HTMLElement からページに関する各データを抽出する
-func HtmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description, keywords, markdown, hash string, err error) {
+// htmlToPageData は colly.HTMLElement からページに関する各データを抽出する
+func htmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description, keywords, markdown, hash string, err error) {
 	// html-to-markdown のコンバーターを作成
 	conv := converter.NewConverter(
 		converter.WithPlugins(
@@ -73,8 +73,8 @@ func HtmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description,
 	return domain, path, pageTitle, description, keywords, markdown, hash, nil
 }
 
-// ValidateAndFormatLinkUrl は URL パスを検証し、必要に応じてフォーマットを行う
-func ValidateAndFormatLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string) (formattedLink string, isValid bool) {
+// validateAndFormatLinkUrl は URL パスを検証し、必要に応じてフォーマットを行う
+func validateAndFormatLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string) (formattedLink string, isValid bool) {
 	link := e.Attr("href")
 
 	// .pdf で終わるリンク、mailto:/javascript:/# 始まるリンク、空のリンクはスキップ
