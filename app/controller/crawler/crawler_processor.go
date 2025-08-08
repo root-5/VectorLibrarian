@@ -14,7 +14,18 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-// htmlToPageData は colly.HTMLElement からページに関する各データを抽出する
+/*
+colly.HTMLElement からページに関する各データを抽出する関数
+  - e					HTMLElement
+  - return)	domain		ドメイン
+  - return)	path		パス
+  - return)	pageTitle	ページタイトル
+  - return)	description	ディスクリプション
+  - return)	keywords	キーワード
+  - return)	markdown	マークダウン形式のコンテンツ
+  - return)	hash		コンテンツのハッシュ値
+  - return) err			エラー
+*/
 func htmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description, keywords, markdown, hash string, err error) {
 	// html-to-markdown のコンバーターを作成
 	conv := converter.NewConverter(
@@ -73,7 +84,14 @@ func htmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description,
 	return domain, path, pageTitle, description, keywords, markdown, hash, nil
 }
 
-// validateAndFormatLinkUrl は URL パスを検証し、必要に応じてフォーマットを行う
+/*
+URL パスの検証と絶対パス変換、https 変換を行う関数
+  - e						HTMLElement
+  - targetDomain			対象ドメイン
+  - allowedPaths			許可するパスの配列
+  - return)	formattedLink	フォーマット済みのリンクURL
+  - return) isValid			URLが有効かどうか
+*/
 func validateAndFormatLinkUrl(e *colly.HTMLElement, targetDomain string, allowedPaths []string) (formattedLink string, isValid bool) {
 	link := e.Attr("href")
 
@@ -110,8 +128,12 @@ func validateAndFormatLinkUrl(e *colly.HTMLElement, targetDomain string, allowed
 	return formattedLink, isValid
 }
 
-// ExtractHeadings はマークダウンから見出しを抽出し、箇条書き形式に変換する
-func ExtractHeadings(markdown string) string {
+/*
+マークダウンから見出しを抽出し、箇条書き形式に変換する関数
+  - markdown	マークダウン形式のテキスト
+  - return)		見出しを箇条書き形式にした文字列
+*/
+func ExtractHeadings(markdown string) (itemizationStr string) {
 	// 正規表現で見出しを抽出
 	re := regexp.MustCompile(`(?m)^(#{1,6})\s+(.*)$`)
 	matches := re.FindAllStringSubmatch(markdown, -1)
@@ -123,6 +145,8 @@ func ExtractHeadings(markdown string) string {
 		item := strings.Repeat("  ", level-1) + "- " + match[2] // レベルに応じてインデント
 		itemization = append(itemization, item)
 	}
+	// 箇条書き形式の文字列を結合
+	itemizationStr = strings.Join(itemization, "\n")
 
-	return strings.Join(itemization, "\n")
+	return itemizationStr
 }
