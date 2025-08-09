@@ -1,10 +1,12 @@
 import onnxruntime as ort
 from tokenizers import Tokenizer
 import numpy as np
+import os
 
 # ONNXモデルとトークナイザーのパス
-onnx_model_path = "onnx_model/onnx/model.onnx"
-tokenizer_path = "onnx_model/tokenizer.json"
+download_dir = os.getenv("DOWNLOAD_DIR")
+onnx_model_path = os.path.join(download_dir, os.getenv("ONNX_MODEL_PATH"))
+tokenizer_path = os.path.join(download_dir, os.getenv("TOKENIZER_PATH"))
 
 # モデルとトークナイザーの読み込み
 tokenizer = Tokenizer.from_file(tokenizer_path)

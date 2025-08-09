@@ -22,12 +22,17 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen
 
 # ONNX モデルとトークナイザーのダウンロード
+ENV MODEL_NAME="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" \
+    ONNX_MODEL_PATH="onnx/model.onnx" \
+    TOKENIZER_PATH="tokenizer.json" \
+    MODEL_VERSION="86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d" \
+    DOWNLOAD_DIR="onnx_model"
 RUN uv run hf download \
-    sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 \
-    onnx/model.onnx \
-    tokenizer.json \
-    --revision 86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d \
-    --local-dir onnx_model
+    ${MODEL_NAME} \
+    ${ONNX_MODEL_PATH} \
+    ${TOKENIZER_PATH} \
+    --revision ${MODEL_VERSION} \
+    --local-dir ${DOWNLOAD_DIR}
 
 EXPOSE 8000
 
