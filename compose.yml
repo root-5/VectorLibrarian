@@ -19,8 +19,6 @@ services:
     env_file: ./nlp/.env
     volumes:
       - ./nlp:/nlp
-    depends_on:
-      - db
 
   db:
     build:
