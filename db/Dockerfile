@@ -18,7 +18,7 @@ RUN git clone https://github.com/pgvector/pgvector.git /usr/src/pgvector \
     && cd / 
 
 # EXTENTION登録SQLをコピー
-COPY ./docker-entrypoint-initdb.d/initial.sql /docker-entrypoint-initdb.d
+COPY ./docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
 
 # 使わないので削除
 RUN apk del \
