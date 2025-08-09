@@ -46,11 +46,13 @@
 3. `uv add optimum`: optimum の追加
 4. `uv add onnx`: onnx の追加
 5. `uv add onnxruntime`: onnxruntime の追加
-6. `uv run main.py`: main.py の実行
+6. `uv add tokenizers`: tokenizers の追加
+7. `uv add "huggingface_hub[cli]"`: huggingface_hub[cli] の追加
+8. `uv run main.py`: main.py の実行
 
-7. `uv add fastapi`: fastapi の追加
-8. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
-9. `uv add neologdn`: neologdn の追加
+9. `uv add fastapi`: fastapi の追加
+10. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
+11. `uv add neologdn`: neologdn の追加
 
 ## Docker 関係コマンド
 
@@ -78,6 +80,15 @@
 - `docker compose exec nlp uv run uvicorn main:app --reload --host 0.0.0.0`: ホットリロードを有効にして FastAPI アプリケーションを実行
   - `curl -X POST "http://localhost:8000/convert" -H "Content-Type: application/json" -d '{ "text": "機械学習とは何ですか？", "is_query": true}'`: ベクトル化 API をテスト
 
+
+
 hugging face version 指定が望ましい
+バージョンが変わってしまうと、以前生成したベクトルデータと新しいモデルで生成したベクトルデータの生成プロセスが変化し、検索結果が変わってしまう可能性があるため。
+また、再ダウンロードが生じる可能性もある。
 https://zenn.dev/yagiyuki/articles/load_pretrained
 
+
+
+uv run hf download sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 onnx/model.onnx tokenizer.json --revision 86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d --local-dir onnx_model
+2度目以降の時に自動ででキャッシュが効く、バージョンの指定ができる、おそらく専用のバリデーションとエラーハンドリングが行われるため wget や curl よりも適している
+https://huggingface.co/docs/huggingface_hub/main/en/guides/download

@@ -21,4 +21,12 @@ COPY pyproject.toml uv.lock ./
 # 依存関係を同期（この段階で全パッケージがインストールされる）
 RUN uv sync --frozen
 
+# ONNX モデルとトークナイザーのダウンロード
+RUN uv run hf download \
+    sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 \
+    onnx/model.onnx \
+    tokenizer.json \
+    --revision 86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d \
+    --local-dir onnx_model
+
 CMD ["tail", "-f", "/dev/null"]
