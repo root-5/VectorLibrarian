@@ -6,6 +6,7 @@ import os
 # ONNXモデルとトークナイザーのパス
 download_dir = os.getenv("DOWNLOAD_DIR")
 onnx_model_path = os.path.join(download_dir, os.getenv("ONNX_MODEL_PATH"))
+onnx_model_path = os.path.dirname(onnx_model_path) + "/model.onnx" # 最後の / 以降を削除して model.onnx とする
 tokenizer_path = os.path.join(download_dir, os.getenv("TOKENIZER_PATH"))
 
 # モデルとトークナイザーの読み込み

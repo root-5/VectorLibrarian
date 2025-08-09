@@ -23,7 +23,7 @@ RUN uv sync --frozen
 
 # ONNX モデルとトークナイザーのダウンロード
 ENV MODEL_NAME="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" \
-    ONNX_MODEL_PATH="onnx/model.onnx" \
+    ONNX_MODEL_PATH="onnx/model_quint8_avx2.onnx" \
     TOKENIZER_PATH="tokenizer.json" \
     MODEL_VERSION="86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d" \
     DOWNLOAD_DIR="onnx_model"
@@ -33,6 +33,9 @@ RUN uv run hf download \
     ${TOKENIZER_PATH} \
     --revision ${MODEL_VERSION} \
     --local-dir ${DOWNLOAD_DIR}
+
+# ダウンロードキャッシュの削除
+RUN rm -rf /root/.cache/huggingface
 
 EXPOSE 8000
 
