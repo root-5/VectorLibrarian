@@ -42,11 +42,12 @@
 ### nlp の実行コマンド
 
 1. `uv init`: uv の初期化
-2. `uv add --dev ruff`: ruff の追加（開発用）
-3. `uv add sentence-transformers`: sentence-transformers の追加
-4. `uv run main.py`: main.py の実行
-5. `uv run ruff check .`: ruff でコードチェック
-6. `uv run ruff format .`: ruff でコードフォーマット
+2. `uv add transformers`: transformers の追加
+3. `uv add optimum`: optimum の追加
+4. `uv add onnx`: onnx の追加
+5. `uv add onnxruntime`: onnxruntime の追加
+6. `uv run main.py`: main.py の実行
+
 7. `uv add fastapi`: fastapi の追加
 8. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
 9. `uv add neologdn`: neologdn の追加
@@ -76,3 +77,7 @@
 - `docker compose exec nlp uv run main.py`: NLP コンテナ内で uv を使って main.py を実行
 - `docker compose exec nlp uv run uvicorn main:app --reload --host 0.0.0.0`: ホットリロードを有効にして FastAPI アプリケーションを実行
   - `curl -X POST "http://localhost:8000/convert" -H "Content-Type: application/json" -d '{ "text": "機械学習とは何ですか？", "is_query": true}'`: ベクトル化 API をテスト
+
+hugging face version 指定が望ましい
+https://zenn.dev/yagiyuki/articles/load_pretrained
+

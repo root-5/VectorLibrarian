@@ -1,81 +1,68 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer, util
-import neologdn
+from transformers import AutoTokenizer
+from optimum.onnxruntime import ORTModelForFeatureExtraction
+import torch
+import os
 
-# グローバル変数でモデルを管理
-model = None
-model_name = "paraphrase-multilingual-MiniLM-L12-v2"
+onnx_model_path = "./onnx_model"
+model_id = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+commit_hash='86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d'
 
-# FastAPIのインスタンスを作成
-app = FastAPI()
-
-# リクエストボディ用のPydanticモデル
-class ConvertRequest(BaseModel):
-    text: str
-    is_query: bool = True
-
-# =====================================================
-# ルーティング
-# =====================================================
-@app.on_event("startup")
-async def startup_event():
-    """アプリケーション起動時にモデルを初期化"""
-    global model
-    print(f"モデルを読み込み中: {model_name}")
-    model = SentenceTransformer(model_name)
-    print("モデルの読み込みが完了しました！")
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-@app.post("/convert")
-def convert(request: ConvertRequest):
-    """ テキストをベクトルに変換するエンドポイント """
-    normalized_text = normalize_text(request.text)  # テキストを正規化
-    vector = convert_to_vector(normalized_text, request.is_query)  # ベクトルに変換
-    return {
-        "input_text": request.text,
-        "normalized_text": normalized_text,
-        "is_query": request.is_query,
-        "model_name": model_name,
-        "dimensions": len(vector),
-        "vector": vector.tolist(),  # numpy配列をリストに変換
-    }
-
-# =====================================================
-# 処理関数
-# =====================================================
-def normalize_text(text: str) -> str:
-    """
-    テキストを正規化する関数
+if os.path.exists(onnx_model_path + "/model.onnx"):
+    # 既存のONNXモデルを使用
+    print("Loading existing ONNX model...")
+    model = ORTModelForFeatureExtraction.from_pretrained(onnx_model_path)
+    tokenizer = AutoTokenizer.from_pretrained(onnx_model_path)
+else:
+    # Hugging Faceからモデルをダウンロードし、同時にONNX形式に変換
+    print("Converting model to ONNX...")
+    model = ORTModelForFeatureExtraction.from_pretrained(
+        model_id,
+        revision=commit_hash,
+        export=True
+    )
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
     
-    Args:
-        text (str): 正規化するテキスト
+    # メモリ上のモデルをディスクに保存
+    model.save_pretrained(onnx_model_path)
+    tokenizer.save_pretrained(onnx_model_path)
 
-    Returns:
-        str: 正規化されたテキスト
-    """
-    return neologdn.normalize(text)
+# 保存されたファイルを確認
+if os.path.exists(onnx_model_path):
+    files = os.listdir(onnx_model_path)
+    print(f"Saved files: {files}")
 
-def convert_to_vector(input_text: str, is_query: bool = True):
-    """
-    テキストをベクトルに変換する関数
+# .onnx 生成目的であれば削除できそう
+def vectorize_text(text):
+    """テキストをベクトル化する関数"""
+    # トークン化
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
     
-    Args:
-        input_text (str): ベクトル化するテキスト
-        is_query (bool): クエリかどうか（True: クエリ, False: ドキュメント）
+    # 推論実行
+    with torch.no_grad():
+        outputs = model(**inputs)
+    
+    # 平均プーリング
+    embeddings = outputs.last_hidden_state
+    attention_mask = inputs['attention_mask']
+    
+    # マスクされた平均を計算
+    masked_embeddings = embeddings * attention_mask.unsqueeze(-1)
+    summed = torch.sum(masked_embeddings, 1)
+    counts = torch.clamp(attention_mask.sum(1), min=1e-9)
+    mean_pooled = summed / counts.unsqueeze(-1)
+    
+    return mean_pooled.numpy()
 
-    Returns:
-        numpy.ndarray: 正規化されたベクトル（384次元）
-    """
+# .onnx 生成目的であれば削除できそう
+def main():
+    print("Model loaded successfully!")
+    
+    # テスト
+    test_text = "こんにちは、世界"
+    vector = vectorize_text(test_text)
+    print(f"Vector shape: {vector.shape}")
+    print(f"First 5 values: {vector[0][:5]}")
 
-    if is_query:
-        prefix = "query: "
-    else:
-        prefix = "passage: "
-
-    vector = model.encode(prefix + input_text, normalize_embeddings=True)
-
-    return vector
+# .onnx 生成目的であれば削除できそう
+if __name__ == "__main__":
+    main()
