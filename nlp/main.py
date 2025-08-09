@@ -1,68 +1,47 @@
-from transformers import AutoTokenizer
-from optimum.onnxruntime import ORTModelForFeatureExtraction
-import torch
-import os
+import onnxruntime as ort
+from tokenizers import Tokenizer
+import numpy as np
 
-onnx_model_path = "./onnx_model"
-model_id = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-commit_hash='86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d'
+# ONNXモデルとトークナイザーのパス
+onnx_model_path = "onnx_model/onnx/model.onnx"
+tokenizer_path = "onnx_model/tokenizer.json"
 
-if os.path.exists(onnx_model_path + "/model.onnx"):
-    # 既存のONNXモデルを使用
-    print("Loading existing ONNX model...")
-    model = ORTModelForFeatureExtraction.from_pretrained(onnx_model_path)
-    tokenizer = AutoTokenizer.from_pretrained(onnx_model_path)
-else:
-    # Hugging Faceからモデルをダウンロードし、同時にONNX形式に変換
-    print("Converting model to ONNX...")
-    model = ORTModelForFeatureExtraction.from_pretrained(
-        model_id,
-        revision=commit_hash,
-        export=True
-    )
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    
-    # メモリ上のモデルをディスクに保存
-    model.save_pretrained(onnx_model_path)
-    tokenizer.save_pretrained(onnx_model_path)
+# モデルとトークナイザーの読み込み
+tokenizer = Tokenizer.from_file(tokenizer_path)
+session = ort.InferenceSession(onnx_model_path, providers=["CPUExecutionProvider"])
 
-# 保存されたファイルを確認
-if os.path.exists(onnx_model_path):
-    files = os.listdir(onnx_model_path)
-    print(f"Saved files: {files}")
+# モデルの入力名を確認
+input_names = [input.name for input in session.get_inputs()]
+print(f"Required inputs: {input_names}")
 
-# .onnx 生成目的であれば削除できそう
-def vectorize_text(text):
-    """テキストをベクトル化する関数"""
-    # トークン化
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
-    
-    # 推論実行
-    with torch.no_grad():
-        outputs = model(**inputs)
-    
-    # 平均プーリング
-    embeddings = outputs.last_hidden_state
-    attention_mask = inputs['attention_mask']
-    
-    # マスクされた平均を計算
-    masked_embeddings = embeddings * attention_mask.unsqueeze(-1)
-    summed = torch.sum(masked_embeddings, 1)
-    counts = torch.clamp(attention_mask.sum(1), min=1e-9)
-    mean_pooled = summed / counts.unsqueeze(-1)
-    
-    return mean_pooled.numpy()
+# テキストをトークナイズ
+text = "これは日本語の文章です。"
+encoded = tokenizer.encode(text)
+input_ids = np.array([encoded.ids], dtype=np.int64)
+attention_mask = np.array([encoded.attention_mask], dtype=np.int64)
 
-# .onnx 生成目的であれば削除できそう
-def main():
-    print("Model loaded successfully!")
-    
-    # テスト
-    test_text = "こんにちは、世界"
-    vector = vectorize_text(test_text)
-    print(f"Vector shape: {vector.shape}")
-    print(f"First 5 values: {vector[0][:5]}")
+# token_type_idsを追加（全て0で初期化）
+seq_length = len(encoded.ids)
+token_type_ids = np.zeros((1, seq_length), dtype=np.int64)
 
-# .onnx 生成目的であれば削除できそう
-if __name__ == "__main__":
-    main()
+# 推論
+outputs = session.run(
+    None,
+    {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "token_type_ids": token_type_ids  # 追加
+    }
+)
+
+# 出力（[batch, seq_len, hidden_size]）
+last_hidden_state = outputs[0]
+
+# プーリング（ここではmean pooling）
+attention_mask_expanded = np.expand_dims(attention_mask, axis=-1)
+sum_embeddings = np.sum(last_hidden_state * attention_mask_expanded, axis=1)
+sum_mask = np.clip(attention_mask_expanded.sum(axis=1), a_min=1e-9, a_max=None)
+sentence_embedding = sum_embeddings / sum_mask
+
+print("ベクトル次元:", sentence_embedding.shape)  # (1, 384)
+print("先頭5次元:", sentence_embedding[0][:5])

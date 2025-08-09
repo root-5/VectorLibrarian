@@ -29,4 +29,6 @@ RUN uv run hf download \
     --revision 86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d \
     --local-dir onnx_model
 
+EXPOSE 8000
+
 CMD ["tail", "-f", "/dev/null"]
