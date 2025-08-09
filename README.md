@@ -61,6 +61,7 @@
 
 - `docker compose exec app sh`: 開発環境コンテナ内でシェルを開く
 - `docker compose exec app go run main.go`: 開発環境コンテナ内でアプリケーションを実行
+- `docker compose exec app curl -X POST "http://nlp:8000/convert" -H "Content-Type: application/json" -d '{ "text": "機械学習とは何ですか？", "is_query": true}'`: ベクトル化 API をテスト
 
 ### db の Docker コマンド
 
@@ -74,4 +75,4 @@
 - `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く
 - `docker compose exec nlp uv run main.py`: NLP コンテナ内で uv を使って main.py を実行
 - `docker compose exec nlp uv run uvicorn main:app --reload --host 0.0.0.0`: ホットリロードを有効にして FastAPI アプリケーションを実行
-  - `curl http://localhost:8000/convert/ＡＩ　（人工知能）`: ベクトル化 API をテスト
+  - `curl -X POST "http://localhost:8000/convert" -H "Content-Type: application/json" -d '{ "text": "機械学習とは何ですか？", "is_query": true}'`: ベクトル化 API をテスト
