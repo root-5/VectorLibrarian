@@ -43,15 +43,20 @@ ENV PATH="$PATH:/usr/local/go/bin"
 
 # Go mod の初期化とONNX Runtime Goライブラリのインストール
 COPY go.mod go.sum ./
-RUN go mod tidy
+RUN go mod download
 
 # libonnxruntime.so のインストール（ONNX Runtime 共有ライブラリ）
 RUN curl -LsSf https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-1.22.0.tgz \
     | tar -xz && \
     cp -r onnxruntime-linux-x64-1.22.0/lib/* /usr/local/lib/ && \
     rm -rf onnxruntime-linux-x64-1.22.0 && \
-    rm -f onnxruntime-linux-x64-1.22.0.tgz && \
-    ldconfig
+    rm -f onnxruntime-linux-x64-1.22.0.tgz
+
+# libtokenizer.a のインストール
+RUN curl -LsSf https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz \
+    | tar -xz && \
+    mv libtokenizers.a /usr/local/lib/ && \
+    rm -f libtokenizers.linux-amd64.tar.gz
 
 EXPOSE 8000
 

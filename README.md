@@ -51,7 +51,7 @@
 8. `uv run main.py`: main.py の実行
 9. `go mod init github.com/root-5/VectorLibrarian/nlp`: モジュールの初期化
 10. `go get github.com/yalue/onnxruntime_go`: ONNX Runtime Go ライブラリのインストール
-11. `go get github.com/huggingface/tokenizers/bindings/go`: Hugging Face Tokenizers Go バインディングのインストール
+11. `go get github.com/daulet/tokenizers`: トークナイザライブラリのインストール
 
 12. `uv add fastapi`: fastapi の追加
 13. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加

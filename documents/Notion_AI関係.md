@@ -100,6 +100,7 @@ SELECT * FROM items ORDER BY embedding <=> '[0.1, 0.2, 0.3]' LIMIT 5;
 
 ## ONNX
 
+ニューラルネットワークなどの学習済みモデルのデファクトスタンダード。
 ONNX（Open Neural Network Exchange）は、異なるフレームワーク間でモデルを共有するためのオープンなフォーマット。これにより、PyTorch や TensorFlow などの異なるフレームワークでトレーニングされたモデルを、他のフレームワークで推論に使用できる。ただし、基本的に静的な計算グラフであるため、動的なモデルには向かないため、主な用途はベクトル化や分類、自然言語生成といった推論に限られる。モデルの学習・訓練、データの前処理、ベクトル間の類似度計算などは通常のフレームワークで行うことが求められる。
 
 ### ONNX のメリット
@@ -138,3 +139,10 @@ predictor = model.deploy(
     instance_type='ml.t3.medium',
     auto_scaling_enabled=True
 )
+
+## トークン化
+
+Golang にはトークン化の公式や強力なライブラリが存在しないため、 github.com/daulet/tokenizers を利用した。以下の方法でのトークン化も試したが、未実装だったり python の tokenizers と同様の結果にならなかったので断念。
+
+- github.com/sugarme/tokenizer
+- AI サポートによる自作
