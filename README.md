@@ -49,10 +49,12 @@
 6. `uv add tokenizers`: tokenizers の追加
 7. `uv add "huggingface_hub[cli]"`: huggingface_hub[cli] の追加
 8. `uv run main.py`: main.py の実行
+9. `go mod init github.com/root-5/VectorLibrarian/nlp`: モジュールの初期化
+10. `go get github.com/yalue/onnxruntime_go`: ONNX Runtime Go ライブラリのインストール
 
-9. `uv add fastapi`: fastapi の追加
-10. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
-11. `uv add neologdn`: neologdn の追加
+11. `uv add fastapi`: fastapi の追加
+12. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
+13. `uv add neologdn`: neologdn の追加
 
 ## Docker 関係コマンド
 
@@ -80,19 +82,16 @@
 - `docker compose exec nlp uv run uvicorn main:app --reload --host 0.0.0.0`: ホットリロードを有効にして FastAPI アプリケーションを実行
   - `curl -X POST "http://localhost:8000/convert" -H "Content-Type: application/json" -d '{ "text": "機械学習とは何ですか？", "is_query": true}'`: ベクトル化 API をテスト
 
-
-
 hugging face version 指定が望ましい
 バージョンが変わってしまうと、以前生成したベクトルデータと新しいモデルで生成したベクトルデータの生成プロセスが変化し、検索結果が変わってしまう可能性があるため。
 また、再ダウンロードが生じる可能性もある。
-https://zenn.dev/yagiyuki/articles/load_pretrained
-
-
+<https://zenn.dev/yagiyuki/articles/load_pretrained>
 
 uv run hf download sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 onnx/model.onnx tokenizer.json --revision 86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d --local-dir onnx_model
 バージョンの指定ができ、おそらく専用のバリデーションとエラーハンドリングが行われるため wget や curl よりも適している
-https://huggingface.co/docs/huggingface_hub/main/en/guides/download
+<https://huggingface.co/docs/huggingface_hub/main/en/guides/download>
 
+<https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2>
 
 model_qint8_arm64.onnx
 model_qint8_avx512.onnx
@@ -114,3 +113,11 @@ avx2 があるので model_quint8_avx2.onnx を使用する
 | 推論速度(GPU) | 基準   | 1.2〜2倍（対応次第） |
 | 精度        | 最高   | 0〜数%低下       |
 | 対応性       | 高い   | ハード依存あり      |
+
+# libonnxruntime.so
+
+onnxruntime.so は以下をビルドしたものの一部？onnxモデルを動かすために必要。gitで以下の公式を落としてきてビルドしたり、pipを使ってインストールする必要ことも可能だが、コンテナでの利用だと重たくなるのでリリースのほうから対象バイナリを含んだtgzをダウンロードして解凍するのが良さそう。
+リリースバージョンによってAssetsに含まれるOSの種類やGPUの有無などが異なるのでほしい物がない場合は過去バージョンを探す必要がある。
+今回は linux x64 gpu なし（onnxruntime-linux-x64-1.22.0.tgz）を使用する。
+<https://github.com/microsoft/onnxruntime>
+<https://github.com/microsoft/onnxruntime/releases>

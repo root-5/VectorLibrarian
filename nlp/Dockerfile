@@ -37,6 +37,19 @@ RUN uv run hf download \
 # ダウンロードキャッシュの削除
 RUN rm -rf /root/.cache/huggingface
 
+# Go のインストール
+RUN curl -LsSf https://golang.org/dl/go1.24.5.linux-amd64.tar.gz | tar -C /usr/local -xzf -
+ENV PATH="$PATH:/usr/local/go/bin"
+
+# Go mod の初期化とONNX Runtime Goライブラリのインストール
+COPY go.mod go.sum ./
+RUN go mod tidy
+
+# libonnxruntime.so のインストール（ONNX Runtime 共有ライブラリ）
+RUN curl -LsSf https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-1.22.0.tgz \
+    | tar -xz -C /usr/local/lib && \
+    ln -s /usr/local/lib/onnxruntime-linux-x64-1.22.0/libonnxruntime.so /usr/local/lib/libonnxruntime.so
+
 EXPOSE 8000
 
 CMD ["tail", "-f", "/dev/null"]
