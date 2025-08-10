@@ -47,4 +47,4 @@ sum_mask = np.clip(attention_mask_expanded.sum(axis=1), a_min=1e-9, a_max=None)
 sentence_embedding = sum_embeddings / sum_mask
 
 print("ベクトル次元:", sentence_embedding.shape)  # (1, 384)
-print("先頭5次元:", sentence_embedding[0][:5])
+print("先頭5次元:", sentence_embedding[0][:5]) # [-0.13136206  0.2220016  -0.03401006  0.17481032  0.1125979 ]
