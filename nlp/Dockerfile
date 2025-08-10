@@ -47,8 +47,11 @@ RUN go mod tidy
 
 # libonnxruntime.so のインストール（ONNX Runtime 共有ライブラリ）
 RUN curl -LsSf https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-1.22.0.tgz \
-    | tar -xz -C /usr/local/lib && \
-    ln -s /usr/local/lib/onnxruntime-linux-x64-1.22.0/libonnxruntime.so /usr/local/lib/libonnxruntime.so
+    | tar -xz && \
+    cp -r onnxruntime-linux-x64-1.22.0/lib/* /usr/local/lib/ && \
+    rm -rf onnxruntime-linux-x64-1.22.0 && \
+    rm -f onnxruntime-linux-x64-1.22.0.tgz && \
+    ldconfig
 
 EXPOSE 8000
 

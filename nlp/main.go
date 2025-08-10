@@ -7,9 +7,6 @@ import (
 )
 
 func main() {
-	// この行は_オプション_かもしれません; デフォルトでは、ライブラリは
-	// Windows上で "onnxruntime.dll" を、その他のシステムでは "onnxruntime.so" を
-	// 読み込もうとします。安定性のために、常に明示的に設定することをお勧めします。
 	ort.SetSharedLibraryPath("/usr/local/lib/libonnxruntime.so")
 
 	err := ort.InitializeEnvironment()
@@ -28,7 +25,7 @@ func main() {
 	inputTensor, err := ort.NewTensor(inputShape, inputData)
 	defer inputTensor.Destroy()
 	// この仮想的なネットワークは 2x5 の入力 -> 2x3x4 の出力にマッピングします。
-	outputShape := ort.NewShape(2, 3, 4)
+	outputShape := ort.NewShape(1, 384)
 	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
 	defer outputTensor.Destroy()
 
@@ -37,11 +34,7 @@ func main() {
 		[]ort.Value{inputTensor}, []ort.Value{outputTensor}, nil)
 	defer session.Destroy()
 
-	// Run() を呼び出すとネットワークが実行され、入力テンソルの現在の内容を読み取り、
-	// 出力テンソルの内容を変更します。
 	err = session.Run()
-
-	// 出力テンソルのデータのスライスビューを取得します。
 	outputData := outputTensor.GetData()
 
 	fmt.Printf("Output data: %v\n", outputData)
@@ -49,6 +42,4 @@ func main() {
 	// 異なる入力でネットワークを実行したい場合は、入力テンソルのデータ
 	// (inputTensor.GetData() 経由で利用可能) を変更し、再度 Run() を呼び出
 	// すればよいだけです。
-
-	// ...
 }
