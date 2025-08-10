@@ -146,3 +146,39 @@ Golang にはトークン化の公式や強力なライブラリが存在しな�
 
 - github.com/sugarme/tokenizer
 - AI サポートによる自作
+
+## huggingface モデルのダウンロードについて
+
+hugging face version 指定が望ましい
+バージョンが変わってしまうと、以前生成したベクトルデータと新しいモデルで生成したベクトルデータの生成プロセスが変化し、検索結果が変わってしまう可能性があるため。
+また、再ダウンロードが生じる可能性もある。
+<https://zenn.dev/yagiyuki/articles/load_pretrained>
+
+uv run hf download sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 onnx/model.onnx tokenizer.json --revision 86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d --local-dir onnx_model
+バージョンの指定ができ、おそらく専用のバリデーションとエラーハンドリングが行われるため wget や curl よりも適している
+<https://huggingface.co/docs/huggingface_hub/main/en/guides/download>
+
+## CPU の命令セットとモデル選択
+
+<https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2>
+
+model_qint8_arm64.onnx
+model_qint8_avx512.onnx
+model_qint8_avx512_vnni.onnx
+model_quint8_avx2.onnx
+
+`lscpu | grep Flags`
+
+```text
+Flags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities
+```
+
+avx2 があるので model_quint8_avx2.onnx を使用する
+
+| 項目        | FP32 | INT8量子化      |
+| --------- | ---- | ------------ |
+| モデルサイズ    | 100% | 約25%         |
+| 推論速度(CPU) | 基準   | 1.5〜4倍       |
+| 推論速度(GPU) | 基準   | 1.2〜2倍（対応次第） |
+| 精度        | 最高   | 0〜数%低下       |
+| 対応性       | 高い   | ハード依存あり      |
