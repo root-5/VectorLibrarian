@@ -299,8 +299,10 @@ sentence_embedding = sum_embeddings / sum_mask # 有効トークン数で除算�
 ## nlp コンテナのサイズ
 
 最初期の python, sentence-transformers, fastapi, uvicorn, paraphrase-multilingual-MiniLM-L12-v2 通常モデルを使っていたコンテナのサイズは 6GB 超だった。あまりに重たすぎるので以下を行って容量を削減した。
+開発用コンテナのサイズは 1GB 程度、本番コンテナサイズは 250MB 程度。
 
 - ONNX モデルを利用することでめちゃくちゃ重い sentence-transformers の依存を削除（4GB?削減）
+- sentence-transformers が不要になったことによる python の依存削除（数百MB削減）
 - ダウンロードしたあとのモデルキャッシュを削除（数百MB削減）
 - 量子化 ONNX モデルの利用（数百MB削減）
--
+- 本番は distroless イメージを利用（数百MB削減）

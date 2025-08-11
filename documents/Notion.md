@@ -63,3 +63,29 @@ type PageContentUpdate struct {
  DeletedAt time.Time
 }
 ```
+
+## distroless イメージの種類
+
+- gcr.io/distroless/static-debian12
+  - **最も小さいイメージ**
+  - glibc や SSL ライブラリすら含まない
+  - 動的リンクのバイナリは動かせない（完全な静的リンクバイナリ専用）
+  - シェルもパッケージマネージャもなし
+  - 主に **Go や Rust の静的ビルド済みバイナリ**を入れて配布する用途
+
+- gcr.io/distroless/base-debian12
+  - glibc と最低限の動的リンクライブラリが入っている
+  - OpenSSL も含まれており、HTTPS通信可能
+  - 動的リンクの Linux バイナリ（C/C++/Java/Node 等）を動かす用途
+  - **SSL 必要なアプリケーションの標準的ベース**
+
+- gcr.io/distroless/base-nossl-debian12
+  - base-debian12 から **SSL/TLS 関連のライブラリ（OpenSSL, CA証明書）を除いたもの**
+  - HTTPS や TLS が不要な場面でさらにサイズを減らすために使う
+  - 社内LAN内でHTTPオンリー通信しかしないバッチ処理などで軽量化に有効
+
+- gcr.io/distroless/cc-debian12
+  - base-debian12 に加えて \*\*C/C++ランタイムライブラリ（libstdc++ 等）\*\*が含まれる
+  - g++/clang でビルドされた C++ アプリを動かす用途
+  - SSLも利用可能
+  - 主に **動的リンクのC++アプリ** や **一部の機械学習推論バイナリ（ONNX Runtimeなど）** を実行するために使う
