@@ -2,26 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/daulet/tokenizers"
 	ort "github.com/yalue/onnxruntime_go"
 )
 
 func main() {
-
-	tk, err := tokenizers.FromFile("onnx_model/tokenizer.json")
-	if err != nil {
-		fmt.Printf("Error loading tokenizer: %v\n", err)
-		return
-	}
-	defer tk.Close()
-
 	text := "これは日本語の文章です。"
 
-	// トークン化（デバッグ時は戻り値を ids, tokens に保存）
-	ids, _ := tk.Encode(text, true) // 第二引数 addSpecialTokens を true にしないと python の結果と異なってしまう
-	// fmt.Printf("Token IDs: %v\n", ids)
-	// fmt.Printf("Tokens: %v\n", tokens)
+	ids, err := tokenize(text)
 
 	// ベクトル化
 	embedding, err := runONNXInference(ids)
@@ -32,10 +23,34 @@ func main() {
 	fmt.Printf("First 5 dimensions: %v\n", embedding[:5]) // [-0.050542377 0.16145682 0.010935326 -0.02508498 0.15268864]
 }
 
+// トークナイズ関数
+func tokenize(text string) (ids []uint32, err error) {
+	// 環境変数から設定を読み込む
+	tokenizerPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("DOWNLOAD_TOKENIZER_PATH")
+
+	tk, err := tokenizers.FromFile(tokenizerPath)
+	if err != nil {
+		fmt.Printf("Error loading tokenizer: %v\n", err)
+		return nil, err
+	}
+	defer tk.Close()
+
+	// トークン化（デバッグ時は戻り値を ids, tokens に保存）
+	ids, _ = tk.Encode(text, true) // 第二引数 addSpecialTokens を true にしないと python の結果と異なってしまう
+	// fmt.Printf("Token IDs: %v\n", ids)
+	// fmt.Printf("Tokens: %v\n", tokens)
+
+	return ids, nil
+}
+
 // ONNX推論用のヘルパー関数
 func runONNXInference(tokenIds []uint32) ([]float32, error) {
-	ort.SetSharedLibraryPath("/usr/local/lib/libonnxruntime.so")
+	tensorLength, _ := strconv.ParseInt(os.Getenv("TENSOR_LENGTH"), 10, 64)
+	onnxruntimePath := os.Getenv("LIBRARY_PATH") + "/libonnxruntime.so"
+	modelPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("SAVED_MODEL_PATH")
 
+	// ONNX Runtime 環境の初期化
+	ort.SetSharedLibraryPath(onnxruntimePath)
 	err := ort.InitializeEnvironment()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize ONNX Runtime: %v", err)
@@ -70,8 +85,7 @@ func runONNXInference(tokenIds []uint32) ([]float32, error) {
 	defer attentionMaskTensor.Destroy()
 
 	// 出力テンソルの形状: [batch_size, sequence_length, hidden_size]
-	// sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 の hidden_size は 384
-	outputShape := ort.NewShape(1, int64(len(tokenIds)), 384)
+	outputShape := ort.NewShape(1, int64(len(tokenIds)), tensorLength)
 	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output tensor: %v", err)
@@ -79,7 +93,6 @@ func runONNXInference(tokenIds []uint32) ([]float32, error) {
 	defer outputTensor.Destroy()
 
 	// セッション作成（実際のモデルファイルパスと入出力名を使用）
-	modelPath := "onnx_model/onnx/model.onnx"
 	inputNames := []string{"input_ids", "attention_mask", "token_type_ids"} // 3つの入力を指定
 	outputNames := []string{"last_hidden_state"}                            // BERT系モデルの一般的な出力名
 
@@ -103,7 +116,7 @@ func runONNXInference(tokenIds []uint32) ([]float32, error) {
 	// python だと出力は (1, トークン数, 384) の形状を持つテンソルとして返される
 	outputData := outputTensor.GetData()
 
-	hiddenSize := 384
+	hiddenSize := int(tensorLength) // モデルの隠れ層の次元数
 	sentenceEmbedding := make([]float32, hiddenSize)
 
 	// 各トークンの埋め込みを平均化して文全体の埋め込みを計算

@@ -295,3 +295,12 @@ sentence_embedding = sum_embeddings / sum_mask # 有効トークン数で除算�
 アテンション機構: 重要な単語により多くの注意を向ける
 プーリング戦略: タスクに応じて最適な文表現方法を選択
 この一連の処理により、意味的に類似した文は近い位置のベクトル空間にマッピングされ、セマンティック検索などの応用が可能になります。
+
+## nlp コンテナのサイズ
+
+最初期の python, sentence-transformers, fastapi, uvicorn, paraphrase-multilingual-MiniLM-L12-v2 通常モデルを使っていたコンテナのサイズは 6GB 超だった。あまりに重たすぎるので以下を行って容量を削減した。
+
+- ONNX モデルを利用することでめちゃくちゃ重い sentence-transformers の依存を削除（4~5GB削減）
+- ダウンロードしたあとのモデルキャッシュを削除（数百MB削減）
+- 量子化 ONNX モデルの利用（数百MB削減）
+-
