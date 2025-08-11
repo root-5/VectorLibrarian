@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: ./app/Dockerfile.prod
+    container_name: app_prod
+    env_file: ./app/.env
+    volumes:
+      - ./app:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - nlp
+
+  nlp:
+    build:
+      context: ./nlp
+      dockerfile: ./nlp/Dockerfile.prod
+    container_name: nlp_prod
+    env_file: ./nlp/.env
+    volumes:
+      - ./nlp:/nlp
+    stop_grace_period: 2s
+
+  db:
+    build:
+      context: ./db
+    container_name: db_prod
+    env_file: ./db/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d/
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/backup:/backup
