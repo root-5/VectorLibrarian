@@ -42,14 +42,20 @@
 ### nlp の実行コマンド
 
 1. `uv init`: uv の初期化
-2. `uv add --dev ruff`: ruff の追加（開発用）
-3. `uv add sentence-transformers`: sentence-transformers の追加
-4. `uv run main.py`: main.py の実行
-5. `uv run ruff check .`: ruff でコードチェック
-6. `uv run ruff format .`: ruff でコードフォーマット
-7. `uv add fastapi`: fastapi の追加
-8. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
-9. `uv add neologdn`: neologdn の追加
+2. `uv add transformers`: transformers の追加
+3. `uv add optimum`: optimum の追加
+4. `uv add onnx`: onnx の追加
+5. `uv add onnxruntime`: onnxruntime の追加
+6. `uv add tokenizers`: tokenizers の追加
+7. `uv add "huggingface_hub[cli]"`: huggingface_hub[cli] の追加
+8. `uv run main.py`: main.py の実行
+9. `go mod init github.com/root-5/VectorLibrarian/nlp`: モジュールの初期化
+10. `go get github.com/yalue/onnxruntime_go`: ONNX Runtime Go ライブラリのインストール
+11. `go get github.com/daulet/tokenizers`: トークナイザライブラリのインストール
+
+12. `uv add fastapi`: fastapi の追加
+13. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
+14. `uv add neologdn`: neologdn の追加
 
 ## Docker 関係コマンド
 
