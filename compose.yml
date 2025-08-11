@@ -20,6 +20,7 @@ services:
     volumes:
       - ./nlp:/nlp
     stop_grace_period: 2s
+
   db:
     build:
       context: ./db

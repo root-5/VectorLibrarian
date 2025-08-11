@@ -1,4 +1,4 @@
-# glibc 問題によるため alpine が使えなかった
+# glibc 問題によるため alpine が使えない
 FROM debian:bookworm-slim AS builder
 
 WORKDIR /nlp
@@ -25,68 +25,60 @@ ENV MODEL_NAME="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" \
 
 # ONNX モデルとトークナイザーのダウンロード
 RUN mkdir -p ${DOWNLOAD_DIR} && \
-    curl -L -o "${DOWNLOAD_DIR}/${SAVED_MODEL_PATH}" \
+    curl -fsSL -o "${DOWNLOAD_DIR}/${SAVED_MODEL_PATH}" \
         "https://huggingface.co/${MODEL_NAME}/resolve/${MODEL_VERSION}/${DOWNLOAD_MODEL_PATH}" && \
-    curl -L -o "${DOWNLOAD_DIR}/${SAVED_TOKENIZER_PATH}" \
+    curl -fsSL -o "${DOWNLOAD_DIR}/${SAVED_TOKENIZER_PATH}" \
         "https://huggingface.co/${MODEL_NAME}/resolve/${MODEL_VERSION}/${DOWNLOAD_TOKENIZER_PATH}"
 
 # ライブラリパスを設定
-ENV LIBRARY_PATH="/usr/local/lib"
+ENV LIBRARY_PATH="/libraries"
+RUN mkdir -p ${LIBRARY_PATH}
 
 # libonnxruntime.so のインストール
-RUN curl -L -o onnxruntime-linux-x64-1.22.0.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-1.22.0.tgz && \
+RUN curl -fsSL -o onnxruntime-linux-x64-1.22.0.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-1.22.0.tgz && \
     tar -xz -f onnxruntime-linux-x64-1.22.0.tgz && \
     cp -r onnxruntime-linux-x64-1.22.0/lib/* ${LIBRARY_PATH} && \
     rm -rf onnxruntime-linux-x64-1.22.0 && \
     rm -f onnxruntime-linux-x64-1.22.0.tgz
 
 # libtokenizers.a のインストール
-RUN curl -L -o libtokenizers.linux-amd64.tar.gz https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz && \
+RUN curl -fsSL -o libtokenizers.linux-amd64.tar.gz https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz && \
     tar -xz -f libtokenizers.linux-amd64.tar.gz && \
     mv libtokenizers.a ${LIBRARY_PATH} && \
     rm -f libtokenizers.linux-amd64.tar.gz
 
 # Go のインストール
-RUN curl -L -o go1.24.4.linux-amd64.tar.gz https://golang.org/dl/go1.24.4.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
-    rm go1.24.4.linux-amd64.tar.gz
+RUN curl -fsSL -o /tmp/go.tar.gz https://golang.org/dl/go1.24.4.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf /tmp/go.tar.gz && \
+    rm /tmp/go.tar.gz
 ENV PATH="$PATH:/usr/local/go/bin"
 
+# Go mod の初期化と依存関係のダウンロード
+ENV GOPROXY=https://proxy.golang.org
+COPY . .
+
+# ビルド実行と確認ステップ
+RUN go mod download && \
+    CGO_ENABLED=1 go build -o main .
+
 # 実行ステージ
-FROM debian:bookworm-slim
+FROM gcr.io/distroless/cc-debian12
 
-WORKDIR /nlp
-
-# 必要なツールをインストール
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    ca-certificates \
-    build-essential && \
-    rm -rf /var/lib/apt/lists/*
-
-# 必要なファイルをコピー
-COPY --from=builder /nlp /nlp
-COPY --from=builder /onnx_model /onnx_model
-COPY --from=builder /usr/local/lib /usr/local/lib
-COPY --from=builder /usr/local/go /usr/local/go
+WORKDIR /app
 
 # ONNX モデルとトークナイザーの環境変数を設定
 ENV DOWNLOAD_DIR="/onnx_model" \
     SAVED_MODEL_PATH="model.onnx" \
     SAVED_TOKENIZER_PATH="tokenizer.json" \
+    LIBRARY_PATH="/libraries" \
     TENSOR_LENGTH=384
 
-# ライブラリパスを設定
-ENV LIBRARY_PATH="/usr/local/lib"
-
-# 環境変数を設定
-ENV PATH="$PATH:/usr/local/go/bin" \
-    CGO_ENABLED=1
-
-# Go モジュールの初期化
-COPY go.mod go.sum ./
-RUN go mod download
+# 必要なファイルをコピー
+COPY --from=builder /nlp/main .
+COPY --from=builder ${DOWNLOAD_DIR} ${DOWNLOAD_DIR}
+COPY --from=builder ${LIBRARY_PATH} ${LIBRARY_PATH}
 
 EXPOSE 8000
 
-CMD ["sleep", "infinity"]
+# 絶対パスで指定
+CMD ["./main"]
