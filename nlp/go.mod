@@ -1,4 +1,4 @@
-module github.com/root-5/VectorLibrarian/nlp
+module nlp
 
 go 1.24.4
 
