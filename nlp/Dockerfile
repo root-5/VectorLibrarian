@@ -60,4 +60,4 @@ COPY . .
 # ライブラリのダウンロード
 RUN go mod download
 
-CMD ["sleep", "infinity"]
+CMD ["go", "run", "main.go"]
