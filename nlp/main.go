@@ -26,7 +26,7 @@ func main() {
 // トークナイズ関数
 func tokenize(text string) (ids []uint32, err error) {
 	// 環境変数から設定を読み込む
-	tokenizerPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("DOWNLOAD_TOKENIZER_PATH")
+	tokenizerPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("SAVED_TOKENIZER_PATH")
 
 	tk, err := tokenizers.FromFile(tokenizerPath)
 	if err != nil {

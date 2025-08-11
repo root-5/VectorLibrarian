@@ -300,7 +300,7 @@ sentence_embedding = sum_embeddings / sum_mask # 有効トークン数で除算�
 
 最初期の python, sentence-transformers, fastapi, uvicorn, paraphrase-multilingual-MiniLM-L12-v2 通常モデルを使っていたコンテナのサイズは 6GB 超だった。あまりに重たすぎるので以下を行って容量を削減した。
 
-- ONNX モデルを利用することでめちゃくちゃ重い sentence-transformers の依存を削除（4~5GB削減）
+- ONNX モデルを利用することでめちゃくちゃ重い sentence-transformers の依存を削除（4GB?削減）
 - ダウンロードしたあとのモデルキャッシュを削除（数百MB削減）
 - 量子化 ONNX モデルの利用（数百MB削減）
 -
