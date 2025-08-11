@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/daulet/tokenizers"
 	"github.com/yalue/onnxruntime_go"
+	"golang.org/x/text/unicode/norm"
 )
 
 func TextToVector(text string, isQuery bool) (vector []float32, err error) {
 	// テキストを正規化
+	text = normalizeText(text)
 
 	// プレフィックスの付与
 	if isQuery {
@@ -29,6 +32,19 @@ func TextToVector(text string, isQuery bool) (vector []float32, err error) {
 		return
 	}
 	return vector, nil
+}
+
+// テキストの正規化関数
+func normalizeText(text string) (normalizedText string) {
+	// Unicode正規化（NFKC）、全角カタカナに統一、半角英数に統一など
+	normalizedText = norm.NFKC.String(text)
+
+	// 小文字化
+	normalizedText = strings.ToLower(normalizedText)
+
+	// スペースや改行の扱いなども必要に応じて追加
+
+	return normalizedText
 }
 
 // トークナイズ関数
