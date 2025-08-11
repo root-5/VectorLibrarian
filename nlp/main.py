@@ -15,7 +15,7 @@ session = ort.InferenceSession(onnx_model_path, providers=["CPUExecutionProvider
 
 # モデルの入力名を確認
 input_names = [input.name for input in session.get_inputs()]
-print(f"Required inputs: {input_names}")
+# print(f"Required inputs: {input_names}")
 
 # テキストをトークナイズ
 text = "これは日本語の文章です。"
@@ -39,6 +39,9 @@ outputs = session.run(
 
 # 出力（[batch, seq_len, hidden_size]）
 last_hidden_state = outputs[0]
+
+print(last_hidden_state) # [[[-5.05423769e-02  1.61456823e-01  1.09353261e-02...]]]、e は指数表記（例：-5.05423769e-02 は -0.050542377）
+print(last_hidden_state.shape)  # (1, 8, 384)
 
 # プーリング（ここではmean pooling）
 attention_mask_expanded = np.expand_dims(attention_mask, axis=-1)

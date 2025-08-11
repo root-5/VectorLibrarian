@@ -32,7 +32,11 @@ func main() {
 		fmt.Printf("Error running ONNX inference: %v\n", err)
 		return
 	}
-	fmt.Printf("Embedding: %v\n", embedding)
+	// 最初の5次元を表示
+	fmt.Println("")
+	fmt.Printf("Embedding shape: %d\n", len(embedding))
+	fmt.Println("")
+	fmt.Printf("First 5 dimensions: %v\n", embedding[:5]) // [-0.050542377 0.16145682 0.010935326 -0.02508498 0.15268864]
 }
 
 // ONNX推論用のヘルパー関数
@@ -45,26 +49,89 @@ func runONNXInference(tokenIds []uint32) ([]float32, error) {
 	}
 	defer ort.DestroyEnvironment()
 
-    inputData := []float32{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9}
-    inputShape := ort.NewShape(2, 5)
-    inputTensor, err := ort.NewTensor(inputShape, inputData)
-    defer inputTensor.Destroy()
-	// This hypothetical network maps a 2x5 input -> 2x3x4 output.
-	outputShape := ort.NewShape(2, 3, 4)
+	// トークンIDを int64 に変換（BERT系モデルで一般的）
+	inputData := make([]int64, len(tokenIds))
+	for i, id := range tokenIds {
+		inputData[i] = int64(id)
+	}
+
+	// token_type_ids を作成（全て0で初期化、単一文の場合）
+	tokenTypeData := make([]int64, len(tokenIds))
+	// 全て0のまま（単一文なので）
+
+	// attention_mask を作成（全て1で初期化、すべてのトークンに注意を向ける）
+	attentionMaskData := make([]int64, len(tokenIds))
+	for i := range attentionMaskData {
+		attentionMaskData[i] = 1 // すべてのトークンが有効
+	}
+
+	// 入力テンソルの形状を実際のトークン数に合わせて調整
+	// [batch_size, sequence_length] = [1, len(tokenIds)]
+	inputShape := ort.NewShape(1, int64(len(tokenIds)))
+
+	// input_ids, token_type_ids, attention_mask テンソルを作成
+	inputTensor, err := ort.NewTensor(inputShape, inputData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create input tensor: %v", err)
+	}
+	defer inputTensor.Destroy()
+
+	tokenTypeTensor, err := ort.NewTensor(inputShape, tokenTypeData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create token_type_ids tensor: %v", err)
+	}
+	defer tokenTypeTensor.Destroy()
+
+	attentionMaskTensor, err := ort.NewTensor(inputShape, attentionMaskData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create attention_mask tensor: %v", err)
+	}
+	defer attentionMaskTensor.Destroy()
+
+	// 出力テンソルの形状: [batch_size, sequence_length, hidden_size]
+	// sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 の hidden_size は 384
+	outputShape := ort.NewShape(1, int64(len(tokenIds)), 384)
 	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create output tensor: %v", err)
+	}
 	defer outputTensor.Destroy()
 
-	session, err := ort.NewAdvancedSession("onnx_model/model.onnx",
-		[]string{"Input 1 Name"}, []string{"Output 1 Name"},
-		[]ort.Value{inputTensor}, []ort.Value{outputTensor}, nil)
+	// セッション作成（実際のモデルファイルパスと入出力名を使用）
+	modelPath := "onnx_model/onnx/model.onnx"
+	inputNames := []string{"input_ids", "attention_mask", "token_type_ids"} // 3つの入力を指定
+	outputNames := []string{"last_hidden_state"}                            // BERT系モデルの一般的な出力名
+
+	session, err := ort.NewAdvancedSession(
+		modelPath,
+		inputNames,
+		outputNames,
+		[]ort.Value{inputTensor, attentionMaskTensor, tokenTypeTensor},
+		[]ort.Value{outputTensor},
+		nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session: %v", err)
+	}
 	defer session.Destroy()
 
-	// Calling Run() will run the network, reading the current contents of the
-	// input tensors and modifying the contents of the output tensors.
+	// モデル推論実行
 	err = session.Run()
+	if err != nil {
+		return nil, fmt.Errorf("failed to run inference: %v", err)
+	}
 
-	// Get a slice view of the output tensor's data.
-	outputData := outputTensor.GetData()
+	// 出力データを取得
+	outputData := outputTensor.GetData() // なぜか単一の float32 スライス（384*len(tokenIds)の長さの1次元配列）として返される
 
-	return outputData, nil
+	hiddenSize := 384
+	sentenceEmbedding := make([]float32, hiddenSize)
+
+	for i := 0; i < hiddenSize; i++ {
+		for j := 0; j < len(tokenIds); j++ {
+			sentenceEmbedding[i] += outputData[j*hiddenSize+i]
+		}
+		sentenceEmbedding[i] /= float32(len(tokenIds)) // 平均化
+	}
+
+	return sentenceEmbedding, nil
 }
