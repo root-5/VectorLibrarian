@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/daulet/tokenizers"
-	ort "github.com/yalue/onnxruntime_go"
+	"github.com/yalue/onnxruntime_go"
 )
 
 func TextToVector(text string, isQuery bool) (vector []float32, err error) {
@@ -23,13 +23,12 @@ func TextToVector(text string, isQuery bool) (vector []float32, err error) {
 	ids, err := tokenize(text)
 
 	// ベクトル化
-	embedding, err := vectorize(ids)
+	vector, err = vectorize(ids)
 	if err != nil {
-		fmt.Printf("Error running ONNX inference: %v\n", err)
+		fmt.Printf("ONNX推論実行エラー: %v\n", err)
 		return
 	}
-	// fmt.Printf("First 5 dimensions: %v\n", embedding[:5]) // [-0.050542377 0.16145682 0.010935326 -0.02508498 0.15268864]
-	return embedding, nil
+	return vector, nil
 }
 
 // トークナイズ関数
@@ -39,32 +38,30 @@ func tokenize(text string) (ids []uint32, err error) {
 
 	tk, err := tokenizers.FromFile(tokenizerPath)
 	if err != nil {
-		fmt.Printf("Error loading tokenizer: %v\n", err)
+		fmt.Printf("tokenizer.json ロードエラー: %v\n", err)
 		return nil, err
 	}
 	defer tk.Close()
 
 	// トークン化（デバッグ時は戻り値を ids, tokens に保存）
 	ids, _ = tk.Encode(text, true) // 第二引数 addSpecialTokens を true にしないと python の結果と異なってしまう
-	// fmt.Printf("Token IDs: %v\n", ids)
-	// fmt.Printf("Tokens: %v\n", tokens)
 
 	return ids, nil
 }
 
 // ONNX推論用のヘルパー関数
-func vectorize(tokenIds []uint32) ([]float32, error) {
+func vectorize(tokenIds []uint32) (sentenceVector []float32, err error) {
 	tensorLength, _ := strconv.ParseInt(os.Getenv("TENSOR_LENGTH"), 10, 64)
 	onnxruntimePath := os.Getenv("LIBRARY_PATH") + "/libonnxruntime.so"
 	modelPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("SAVED_MODEL_PATH")
 
 	// ONNX Runtime 環境の初期化
-	ort.SetSharedLibraryPath(onnxruntimePath)
-	err := ort.InitializeEnvironment()
+	onnxruntime_go.SetSharedLibraryPath(onnxruntimePath)
+	err = onnxruntime_go.InitializeEnvironment()
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize ONNX Runtime: %v", err)
+		return nil, fmt.Errorf("ONNX Runtime の初期化に失敗しました: %v", err)
 	}
-	defer ort.DestroyEnvironment()
+	defer onnxruntime_go.DestroyEnvironment()
 
 	// トークンIDを int64 に変換（BERT系モデルで一般的）
 	inputData := make([]int64, len(tokenIds))
@@ -72,70 +69,62 @@ func vectorize(tokenIds []uint32) ([]float32, error) {
 		inputData[i] = int64(id)
 	}
 
-	// token_type_ids を作成（単一文なので全て0で初期化）
+	// token_type_ids を作成（単一文なので全て0で初期化）、attention_mask （全トークン有効のため、1で初期化）
 	tokenTypeData := make([]int64, len(tokenIds))
-
-	// attention_mask を作成（すべてのトークンを有効にするため、1で初期化）
 	attentionMaskData := make([]int64, len(tokenIds))
 	for i := range attentionMaskData {
 		attentionMaskData[i] = 1
 	}
 
 	// 入力テンソルの形状を実際のトークン数に合わせて調整
-	// [batch_size, sequence_length] = [1, len(tokenIds)]
-	inputShape := ort.NewShape(1, int64(len(tokenIds)))
+	inputShape := onnxruntime_go.NewShape(1, int64(len(tokenIds)))
 
 	// input_ids, token_type_ids, attention_mask テンソルを作成
-	inputTensor, _ := ort.NewTensor(inputShape, inputData)
+	inputTensor, _ := onnxruntime_go.NewTensor(inputShape, inputData)
 	defer inputTensor.Destroy()
-	tokenTypeTensor, _ := ort.NewTensor(inputShape, tokenTypeData)
+	tokenTypeTensor, _ := onnxruntime_go.NewTensor(inputShape, tokenTypeData)
 	defer tokenTypeTensor.Destroy()
-	attentionMaskTensor, _ := ort.NewTensor(inputShape, attentionMaskData)
+	attentionMaskTensor, _ := onnxruntime_go.NewTensor(inputShape, attentionMaskData)
 	defer attentionMaskTensor.Destroy()
 
 	// 出力テンソルの形状: [batch_size, sequence_length, hidden_size]
-	outputShape := ort.NewShape(1, int64(len(tokenIds)), tensorLength)
-	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
+	outputShape := onnxruntime_go.NewShape(1, int64(len(tokenIds)), tensorLength)
+	outputTensor, err := onnxruntime_go.NewEmptyTensor[float32](outputShape)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create output tensor: %v", err)
+		return nil, fmt.Errorf("出力テンソルの作成に失敗しました: %v", err)
 	}
 	defer outputTensor.Destroy()
 
 	// セッション作成（実際のモデルファイルパスと入出力名を使用）
 	inputNames := []string{"input_ids", "attention_mask", "token_type_ids"} // 3つの入力を指定
 	outputNames := []string{"last_hidden_state"}                            // BERT系モデルの一般的な出力名
-
-	session, err := ort.NewAdvancedSession(
+	session, err := onnxruntime_go.NewAdvancedSession(
 		modelPath, inputNames, outputNames,
-		[]ort.Value{inputTensor, attentionMaskTensor, tokenTypeTensor},
-		[]ort.Value{outputTensor}, nil)
+		[]onnxruntime_go.Value{inputTensor, attentionMaskTensor, tokenTypeTensor},
+		[]onnxruntime_go.Value{outputTensor}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %v", err)
+		return nil, fmt.Errorf("セッションの作成に失敗しました: %v", err)
 	}
 	defer session.Destroy()
 
 	// モデル推論実行
 	err = session.Run()
 	if err != nil {
-		return nil, fmt.Errorf("failed to run inference: %v", err)
+		return nil, fmt.Errorf("推論の実行に失敗しました: %v", err)
 	}
 
-	// 出力データを取得
-	// なぜか1次元の float32 スライス（384*トークン数）として返される
-	// python だと出力は (1, トークン数, 384) の形状を持つテンソルとして返される
+	// 出力データを取得、ライブラリの使用か何らかの理由で1次元の float32 スライス（384*トークン数）として返される
 	outputData := outputTensor.GetData()
 
+	// 各トークンの埋め込みを平均化して文全体の埋め込みを計算、マスクは考慮しない（すべてのトークンが有効と仮定）
 	hiddenSize := int(tensorLength) // モデルの隠れ層の次元数
-	sentenceEmbedding := make([]float32, hiddenSize)
-
-	// 各トークンの埋め込みを平均化して文全体の埋め込みを計算
-	// アテンションマスクは考慮しない（すべてのトークンが有効と仮定）
+	sentenceVector = make([]float32, hiddenSize)
 	for i := 0; i < hiddenSize; i++ {
 		for j := 0; j < len(tokenIds); j++ {
-			sentenceEmbedding[i] += outputData[j*hiddenSize+i]
+			sentenceVector[i] += outputData[j*hiddenSize+i]
 		}
-		sentenceEmbedding[i] /= float32(len(tokenIds)) // 平均化
+		sentenceVector[i] /= float32(len(tokenIds)) // 平均化
 	}
 
-	return sentenceEmbedding, nil
+	return sentenceVector, nil
 }
