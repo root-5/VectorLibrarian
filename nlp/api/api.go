@@ -33,7 +33,9 @@ type ConvertResponse struct {
 // APIサーバーを起動する関数
 func StartServer() {
 	http.HandleFunc("/", handler)
-	http.ListenAndServe(":"+port, nil)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		fmt.Printf("サーバーの起動に失敗しました: %v\n", err)
+	}
 }
 
 // リクエストを処理する関数

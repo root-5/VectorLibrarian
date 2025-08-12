@@ -24,6 +24,10 @@ func TextToVector(text string, isQuery bool) (vector []float32, err error) {
 
 	// トークン化
 	ids, err := tokenize(text)
+	if err != nil {
+		fmt.Printf("トークナイズエラー: %v\n", err)
+		return nil, err
+	}
 
 	// ベクトル化
 	vector, err = vectorize(ids)
@@ -67,7 +71,11 @@ func tokenize(text string) (ids []uint32, err error) {
 
 // ONNX推論用のヘルパー関数
 func vectorize(tokenIds []uint32) (sentenceVector []float32, err error) {
-	tensorLength, _ := strconv.ParseInt(os.Getenv("TENSOR_LENGTH"), 10, 64)
+	tensorLengthStr := os.Getenv("TENSOR_LENGTH")
+	tensorLength, err := strconv.ParseInt(tensorLengthStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("TENSOR_LENGTH 環境変数が設定されていないか無効です: %v", err)
+	}
 	onnxruntimePath := os.Getenv("LIBRARY_PATH") + "/libonnxruntime.so"
 	modelPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("SAVED_MODEL_PATH")
 

@@ -14,9 +14,10 @@ func Start() {
 	// 初期設定・定数
 	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
-		"/prsite/", // テスト用に PR サイトのみ対象に
+		// "/prsite/", // テスト用に PR サイトのみ対象に
+		"/",
 	}
-	maxScrapeDepth := 10       // 最大スクレイピング深度を設定
+	maxScrapeDepth := 7        // 最大スクレイピング深度を設定
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// デフォルトのコレクターを作成
@@ -33,9 +34,9 @@ func Start() {
 	})
 
 	// リクエスト前に "アクセス >> " を表示
-	// c.OnRequest(func(r *colly.Request) {
-	// 	log.Info(">> URL:" + r.URL.String())
-	// })
+	c.OnRequest(func(r *colly.Request) {
+		log.Info(">> URL:" + r.URL.String())
+	})
 
 	// html タグを見つけたときの処理
 	c.OnHTML("html", func(e *colly.HTMLElement) {

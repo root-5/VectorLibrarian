@@ -73,7 +73,7 @@
 
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'`: 開発環境コンテナ内で PostgreSQL に接続
   - `SELECT * FROM pages;`: データベースの内容を確認
-- `docker compose exec db sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backup/backup.sql'`: データベースのバックアップを取得
+- `docker compose exec db sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backup/backup_$(date +%Y-%m-%d_%H-%M).sql'`: データベースのバックアップを取得
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB < /backup/backup.sql'`: データベースのバックアップを復元
 
 ### nlp の Docker コマンド
