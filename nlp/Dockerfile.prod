@@ -57,7 +57,28 @@ ENV PATH="$PATH:/usr/local/go/bin"
 ENV GOPROXY=https://proxy.golang.org
 COPY . .
 
-# ライブラリのダウンロード
-RUN go mod download
+# ビルド実行と確認ステップ
+RUN go mod download && \
+    CGO_ENABLED=1 go build -o main .
 
-CMD ["go", "run", "main.go"]
+# 実行ステージ
+FROM gcr.io/distroless/cc-debian12
+
+WORKDIR /app
+
+# ONNX モデルとトークナイザーの環境変数を設定
+ENV DOWNLOAD_DIR="/onnx_model" \
+    SAVED_MODEL_PATH="model.onnx" \
+    SAVED_TOKENIZER_PATH="tokenizer.json" \
+    LIBRARY_PATH="/libraries" \
+    TENSOR_LENGTH=384
+
+# 必要なファイルをコピー
+COPY --from=builder /nlp/main .
+COPY --from=builder ${DOWNLOAD_DIR} ${DOWNLOAD_DIR}
+COPY --from=builder ${LIBRARY_PATH} ${LIBRARY_PATH}
+
+EXPOSE 8000
+
+# 絶対パスで指定
+CMD ["./main"]
