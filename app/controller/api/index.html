@@ -4,58 +4,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HP 情報検索サイト</title>
+    <title>羽村市 HP 意味検索</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
     <div class="container">
-        <h1>HP 情報検索サイト</h1>
+        <h1>羽村市 HP 意味検索</h1>
         <div class="search-box">
-            <input type="text" id="search-input" placeholder="キーワードを入力...">
+            <input type="text" id="search-input" placeholder="例: 子供関係の補助金を教えて">
             <button id="search-button">検索</button>
         </div>
+        <div id="loading-indicator" style="display: none;">検索中...</div>
         <div id="search-results">
             <!-- 検索結果がここに表示されます -->
         </div>
     </div>
-<script>
-    document.getElementById('search-button').addEventListener('click', async function() {
-        const query = document.getElementById('search-input').value;
-        const resultsDiv = document.getElementById('search-results');
-        resultsDiv.innerHTML = ''; // Clear previous results
-
-        if (query.trim() === '') {
-            resultsDiv.innerHTML = '<p>検索キーワードを入力してください。</p>';
-            return;
-        }
-
-        try {
-            const response = await fetch(`/search?q=${query}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+    <script>
+        document.getElementById('search-input').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                document.getElementById('search-button').click();
             }
-            const searchResults = await response.json();
+        });
 
-            if (searchResults.length > 0) {
-                searchResults.forEach(result => {
-                    const resultItem = document.createElement('div');
-                    resultItem.classList.add('result-item');
-                    // Assuming result object has 'Title', 'Content', 'URL' properties
-                    resultItem.innerHTML = `
-                        <h3><a href="${result.domain}${result.path}">${result.title}</a></h3>
+        document.getElementById('search-button').addEventListener('click', async function () {
+            const query = document.getElementById('search-input').value;
+            const resultsDiv = document.getElementById('search-results');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            if (query.trim() === '') {
+                resultsDiv.innerHTML = '<p>検索キーワードを入力してください。</p>';
+                return;
+            }
+
+            loadingIndicator.style.display = 'block'; // Show loading indicator
+
+            try {
+                const response = await fetch(`/search?q=${query}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const searchResults = await response.json();
+
+                if (searchResults.length > 0) {
+                    searchResults.forEach(result => {
+                        const resultItem = document.createElement('div');
+                        let description;
+                        if (result.description || result.description == '--') {
+                            description = result.description;
+                        } else {
+                            description = result.keywords;
+                        }
+                        resultItem.classList.add('result-item');
+                        resultItem.innerHTML = `
+                        <h3><a href="https://${result.domain}${result.path}" target="_blank" rel="noopener noreferrer">${result.title}</a></h3>
                         <p>${result.description}</p>
                     `;
-                    resultsDiv.appendChild(resultItem);
-                });
-            } else {
-                resultsDiv.innerHTML = '<p>検索結果が見つかりませんでした。</p>';
+                        resultsDiv.appendChild(resultItem);
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<p>検索結果が見つかりませんでした。</p>';
+                }
+            } catch (error) {
+                console.error('検索中にエラーが発生しました:', error);
+                resultsDiv.innerHTML = '<p>検索中にエラーが発生しました。もう一度お試しください。</p>';
+            } finally {
+                loadingIndicator.style.display = 'none'; // Hide loading indicator
             }
-        } catch (error) {
-            console.error('検索中にエラーが発生しました:', error);
-            resultsDiv.innerHTML = '<p>検索中にエラーが発生しました。もう一度お試しください。</p>';
-        }
-    });
-</script>
+        });
+    </script>
 </body>
 </html>
