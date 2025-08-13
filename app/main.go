@@ -2,9 +2,9 @@ package main
 
 import (
 	"app/controller/api"
-	"app/controller/crawler"
 	"app/controller/log"
 	"app/controller/postgres"
+	"app/usecase/scheduler"
 
 	_ "github.com/lib/pq"
 )
@@ -24,11 +24,10 @@ func main() {
 	log.Info("データベース接続とテーブル初期化完了")
 
 	// =======================================================================
-	// クローリングの開始
+	// スケジューラーの初期化
 	// =======================================================================
-	log.Info("クローリング開始")
-	crawler.Start()
-	log.Info("クローリング完了")
+	log.Info("スケジューラーの初期化")
+	scheduler.SchedulerStart()
 
 	// =======================================================================
 	// API サーバーを起動
