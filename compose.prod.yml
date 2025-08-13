@@ -1,33 +1,30 @@
 services:
-  app:
+  app_prod:
     build:
       context: ./app
-      dockerfile: ./app/Dockerfile.prod
+      dockerfile: ./Dockerfile.prod
     container_name: app_prod
-    env_file: ./app/.env
-    volumes:
-      - ./app:/app
+    env_file: ./app/.prod.env
     ports:
       - "8080:8080"
     depends_on:
-      - db
-      - nlp
+      - db_prod
+      - nlp_prod
 
-  nlp:
+  nlp_prod:
     build:
       context: ./nlp
-      dockerfile: ./nlp/Dockerfile.prod
+      dockerfile: ./Dockerfile.prod
     container_name: nlp_prod
-    env_file: ./nlp/.env
-    volumes:
-      - ./nlp:/nlp
+    env_file: ./nlp/.prod.env
     stop_grace_period: 2s
 
-  db:
+  db_prod:
     build:
       context: ./db
+      dockerfile: ./Dockerfile.prod
     container_name: db_prod
-    env_file: ./db/.env
+    env_file: ./db/.prod.env
     ports:
       - "5432:5432"
     volumes:

@@ -53,15 +53,13 @@
 10. `go get github.com/yalue/onnxruntime_go`: ONNX Runtime Go ライブラリのインストール
 11. `go get github.com/daulet/tokenizers`: トークナイザライブラリのインストール
 
-12. `uv add fastapi`: fastapi の追加
-13. `uv add "uvicorn[standard]"`: "uvicorn[standard]" の追加
-14. `uv add neologdn`: neologdn の追加
-
 ## Docker 関係コマンド
 
 - `docker compose up -d`: 開発環境コンテナの起動
 - `docker compose down`: 開発環境コンテナの停止
 - `docker compose down --rmi all`: 開発環境コンテナの停止とイメージの削除
+- `docker-compose -f="compose.prod.yml" up -d`: 本番環境コンテナの起動
+- `docker-compose -f="compose.prod.yml" down`: 本番環境コンテナの停止
 
 ### app の Docker コマンド
 
@@ -73,6 +71,7 @@
 
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'`: 開発環境コンテナ内で PostgreSQL に接続
   - `SELECT * FROM pages;`: データベースの内容を確認
+  - `\dx`: 拡張機能の確認
 - `docker compose exec db sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backup/backup_$(date +%Y-%m-%d_%H-%M).sql'`: データベースのバックアップを取得
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB < /backup/backup.sql'`: データベースのバックアップを復元
 
