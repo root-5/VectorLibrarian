@@ -68,7 +68,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	case "/style.css":
 		http.ServeFile(w, r, "controller/api/style.css")
 
-	// 説明用 index.html を返す
+	// index.html
 	case "/":
 		http.ServeFile(w, r, "controller/api/index.html")
 

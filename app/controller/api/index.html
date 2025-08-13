@@ -4,28 +4,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>How to use</title>
+    <title>HP 情報検索サイト</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
-    <h2>使い方</h2>
-    <br>
-    <table>
-        <thead>
-            <tr>
-                <th>URLパス</th>
-                <th>例</th>
-                <th>取得できるデータ</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>/search</td>
-                <td><a href="/search?q=補助金">/search?q=補助金</a></td>
-                <td>検索語句をベクトル検索した結果の上位 20 件</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="container">
+        <h1>HP 情報検索サイト</h1>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="キーワードを入力...">
+            <button id="search-button">検索</button>
+        </div>
+        <div id="search-results">
+            <!-- 検索結果がここに表示されます -->
+        </div>
+    </div>
+<script>
+    document.getElementById('search-button').addEventListener('click', async function() {
+        const query = document.getElementById('search-input').value;
+        const resultsDiv = document.getElementById('search-results');
+        resultsDiv.innerHTML = ''; // Clear previous results
+
+        if (query.trim() === '') {
+            resultsDiv.innerHTML = '<p>検索キーワードを入力してください。</p>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/search?q=${query}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const searchResults = await response.json();
+
+            if (searchResults.length > 0) {
+                searchResults.forEach(result => {
+                    const resultItem = document.createElement('div');
+                    resultItem.classList.add('result-item');
+                    // Assuming result object has 'Title', 'Content', 'URL' properties
+                    resultItem.innerHTML = `
+                        <h3><a href="${result.domain}${result.path}">${result.title}</a></h3>
+                        <p>${result.description}</p>
+                    `;
+                    resultsDiv.appendChild(resultItem);
+                });
+            } else {
+                resultsDiv.innerHTML = '<p>検索結果が見つかりませんでした。</p>';
+            }
+        } catch (error) {
+            console.error('検索中にエラーが発生しました:', error);
+            resultsDiv.innerHTML = '<p>検索中にエラーが発生しました。もう一度お試しください。</p>';
+        }
+    });
+</script>
 </body>
 </html>
