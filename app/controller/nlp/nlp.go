@@ -52,8 +52,6 @@ func ConvertToVector(text string, isQuery bool) ([]float32, error) {
 	}
 	defer resp.Body.Close()
 
-	log.Info("NLP request: " + resp.Status)
-
 	// 構造体に直接デコード
 	var result ConvertResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {

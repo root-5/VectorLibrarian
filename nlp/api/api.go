@@ -53,6 +53,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func postHandler(w http.ResponseWriter, r *http.Request) {
 	// リクエストパスを取得
 	path := r.URL.Path
+	fmt.Println("Access:", path)
 
 	// リクエストパスによって処理を分岐
 	switch path {

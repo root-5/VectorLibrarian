@@ -36,9 +36,9 @@ func Start() (err error) {
 	})
 
 	// リクエスト前に "アクセス >> " を表示
-	c.OnRequest(func(r *colly.Request) {
-		log.Info(">> URL:" + r.URL.String())
-	})
+	// c.OnRequest(func(r *colly.Request) {
+	// 	log.Info(">> URL:" + r.URL.String())
+	// })
 
 	// html タグを見つけたときの処理
 	c.OnHTML("html", func(e *colly.HTMLElement) {
