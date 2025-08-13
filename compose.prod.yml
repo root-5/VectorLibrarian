@@ -5,6 +5,8 @@ services:
       dockerfile: ./Dockerfile.prod
     container_name: app_prod
     env_file: ./app/.prod.env
+    volumes:
+      - ./app/cache:/app/cache
     ports:
       - "8080:8080"
     depends_on:
