@@ -28,3 +28,4 @@ go.work.sum
 !/db/data/.gitkeep
 /db/backup/*
 !/db/backup/.gitkeep
+/production

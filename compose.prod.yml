@@ -12,6 +12,7 @@ services:
     depends_on:
       - db_prod
       - nlp_prod
+    restart: always
 
   nlp_prod:
     build:
