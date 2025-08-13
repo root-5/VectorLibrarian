@@ -4,7 +4,6 @@ import (
 	"app/controller/log"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 )
@@ -41,13 +40,15 @@ func ConvertToVector(text string, isQuery bool) ([]float32, error) {
 
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
-		return nil, fmt.Errorf("JSONエンコードに失敗: %w", err)
+		log.Error(err)
+		return nil, err
 	}
 
 	// POSTリクエストを送信
 	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":8000/convert", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, fmt.Errorf("NLP サーバーへのリクエストに失敗: %w", err)
+		log.Error(err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -56,10 +57,9 @@ func ConvertToVector(text string, isQuery bool) ([]float32, error) {
 	// 構造体に直接デコード
 	var result ConvertResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("NLP サーバーからのレスポンスの解析に失敗: %w", err)
+		log.Error(err)
+		return nil, err
 	}
-
-	// log.Info("NLP サーバーからのレスポンスの中身: " + fmt.Sprintf("%+v", result))
 
 	return result.Vector, nil
 }
