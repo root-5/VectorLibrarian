@@ -11,8 +11,6 @@ import (
 )
 
 func Start() (err error) {
-	log.Info("クローリング開始")
-
 	// 初期設定・定数
 	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
 	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）

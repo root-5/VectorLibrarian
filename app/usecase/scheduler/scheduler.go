@@ -23,7 +23,7 @@ func schedulerExec(jobs Jobs) {
 		if job.ExecuteFlag {
 			go func(job Job) {
 				for {
-					log.Info("定期実行: " + job.Name)
+					log.Info("  └─ " + job.Name)
 					job.Function()
 					time.Sleep(job.Duration)
 				}
