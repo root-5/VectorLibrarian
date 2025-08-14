@@ -174,6 +174,7 @@ Flags:                                fpu vme de pse tsc msr pae mce cx8 apic se
 ```
 
 avx2 があるので model_quint8_avx2.onnx を使用する
+本番は arm64 なので model_qint8_arm64.onnx を使用する
 
 | 項目        | FP32 | INT8量子化      |
 | --------- | ---- | ------------ |
