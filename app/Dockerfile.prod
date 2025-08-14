@@ -22,6 +22,7 @@ WORKDIR /app
 
 # ビルドステージからコンパイル済みのバイナリのみをコピー
 COPY --from=builder /app/main .
+COPY --from=builder /app/controller/api/public/ ./controller/api/public
 
 # コンテナ起動時にアプリケーションを実行
 CMD ["./main"]

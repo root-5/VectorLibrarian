@@ -62,15 +62,15 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 
 	// ファビコン
 	case "/favicon.ico":
-		http.ServeFile(w, r, "controller/api/smile.ico")
+		http.ServeFile(w, r, "controller/api/public/smile.ico")
 
 	// CSS
 	case "/style.css":
-		http.ServeFile(w, r, "controller/api/style.css")
+		http.ServeFile(w, r, "controller/api/public/style.css")
 
 	// index.html
 	case "/":
-		http.ServeFile(w, r, "controller/api/index.html")
+		http.ServeFile(w, r, "controller/api/public/index.html")
 
 	default:
 		// アクセス元のIPアドレスを取得
