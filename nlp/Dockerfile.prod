@@ -38,14 +38,14 @@ ENV LIBRARY_PATH="/libraries"
 RUN mkdir -p ${LIBRARY_PATH}
 
 # libonnxruntime.so のインストール
-RUN curl -fsSL -o onnxruntime-linux-x64-1.22.0.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-arm64-1.22.0.tgz && \
+RUN curl -fsSL -o onnxruntime-linux-x64-1.22.0.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-aarch64-1.22.0.tgz && \
     tar -xz -f onnxruntime-linux-x64-1.22.0.tgz && \
     cp -r onnxruntime-linux-x64-1.22.0/lib/* ${LIBRARY_PATH} && \
     rm -rf onnxruntime-linux-x64-1.22.0 && \
     rm -f onnxruntime-linux-x64-1.22.0.tgz
 
 # libtokenizers.a のインストール
-RUN curl -fsSL -o libtokenizers.linux-amd64.tar.gz https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-arm64.tar.gz && \
+RUN curl -fsSL -o libtokenizers.linux-amd64.tar.gz https://github.com/daulet/tokenizers/releases/download/v1.22.2/libtokenizers.linux-aarch64.tar.gz && \
     tar -xz -f libtokenizers.linux-amd64.tar.gz && \
     mv libtokenizers.a ${LIBRARY_PATH} && \
     rm -f libtokenizers.linux-amd64.tar.gz
