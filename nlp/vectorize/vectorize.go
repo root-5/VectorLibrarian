@@ -56,7 +56,14 @@ func tokenize(text string) (ids []uint32, err error) {
 	// 環境変数から設定を読み込む
 	tokenizerPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("SAVED_TOKENIZER_PATH")
 
-	tk, err := tokenizers.FromFile(tokenizerPath)
+	tokenizerData, err := os.ReadFile(tokenizerPath)
+	if err != nil {
+		// エラーハンドリング
+		return nil, err
+	}
+
+	// 512 は BERT 系モデルの最大トークン数、トランケーション（長すぎるトークンの切り捨て）方向は右側
+	tk, err := tokenizers.FromBytesWithTruncation(tokenizerData, 512, tokenizers.TruncationDirectionRight)
 	if err != nil {
 		fmt.Printf("tokenizer.json ロードエラー: %v\n", err)
 		return nil, err
@@ -65,6 +72,10 @@ func tokenize(text string) (ids []uint32, err error) {
 
 	// トークン化（デバッグ時は戻り値を ids, tokens に保存）
 	ids, _ = tk.Encode(text, true) // 第二引数 addSpecialTokens を true にしないと python の結果と異なってしまう
+
+	// トークン数を表示
+	fmt.Printf("%s", text)
+	fmt.Printf(">> トークン数: %d\n", len(ids))
 
 	return ids, nil
 }
