@@ -74,7 +74,7 @@ func tokenize(text string) (ids []uint32, err error) {
 	ids, _ = tk.Encode(text, true) // 第二引数 addSpecialTokens を true にしないと python の結果と異なってしまう
 
 	// トークン数を表示
-	fmt.Printf("%s", text)
+	// fmt.Printf("%s", text)
 	fmt.Printf(">> トークン数: %d\n", len(ids))
 
 	return ids, nil

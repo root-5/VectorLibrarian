@@ -4,6 +4,7 @@ import (
 	"app/controller/log"
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/commonmark"
 	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/table"
 	"github.com/gocolly/colly/v2"
+	"github.com/ikawaha/kagome-dict/ipa"
+	"github.com/ikawaha/kagome/v2/tokenizer"
 )
 
 /*
@@ -76,6 +79,7 @@ func htmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description,
 		log.Error(err)
 		return
 	}
+	markdown = regexp.MustCompile(`<!--.*?-->`).ReplaceAllString(markdown, "") // html コメントアウトを削除
 
 	// markdown のハッシュを計算
 	hashBin := sha1.Sum([]byte(markdown))
@@ -149,4 +153,22 @@ func ExtractHeadings(markdown string) (itemizationStr string) {
 	itemizationStr = strings.Join(itemization, "\n")
 
 	return itemizationStr
+}
+
+/*
+マークダウンを分かち書きする関数
+  - markdown	マークダウン形式のテキスト
+  - return)		分かち書きされた文字列のスライス
+*/
+func SplitMarkdown(markdown string) (words []string) {
+	t, err := tokenizer.New(ipa.Dict(), tokenizer.OmitBosEos())
+	if err != nil {
+		panic(err)
+	}
+	// wakati
+	fmt.Println("---wakati---")
+	seg := t.Wakati(markdown)
+	fmt.Println(seg)
+	words = seg
+	return words
 }

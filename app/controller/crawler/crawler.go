@@ -4,6 +4,7 @@ import (
 	"app/controller/log"
 	"app/controller/nlp"
 	"app/controller/postgres"
+	"fmt"
 	"time"
 
 	"github.com/gocolly/colly/v2"
@@ -57,11 +58,15 @@ func Start() (err error) {
 			return // 既に保存されているハッシュがあればスキップ
 		}
 
+		// markdown を分かち書き
+		wakati := SplitMarkdown(markdown)
+		log.Info("分かち書き結果: " + fmt.Sprint(wakati))
+
 		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
 		itemization := ExtractHeadings(markdown)
 		targetText := "## page title\n\n" + pageTitle +
-			// "\n\n## page description\n\n" + description +
-			// "\n\n## page keywords\n\n" + keywords +
+			"\n\n## page description\n\n" + description +
+			"\n\n## page keywords\n\n" + keywords +
 			"\n\n## page itemization\n\n" + itemization
 
 		// 箇条書きをテキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
