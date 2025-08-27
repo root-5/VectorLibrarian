@@ -29,14 +29,15 @@ func Start() {
 	// =======================================================================
 	// 初期設定・定数
 	targetDomain := "www.city.hamura.tokyo.jp"
-	startPath := "/0000019572.html"
+	startPath := "/prsite/0000000440.html"
 	allowedPaths := []string{
-		"/0000019572.html",
+		"/prsite/0000000440.html",
 	}
 	maxScrapeDepth := 7
+	isTest := true
 
 	// クロールを開始
-	err = crawler.CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth)
+	err = crawler.CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth, isTest)
 	if err != nil {
 		log.Error(err)
 		return

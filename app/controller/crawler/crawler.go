@@ -19,9 +19,10 @@ func Start() (err error) {
 		"/",
 	}
 	maxScrapeDepth := 7
+	isTest := false
 
 	// クロールを開始
-	err = CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth)
+	err = CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth, isTest)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -36,21 +37,25 @@ func Start() (err error) {
   - startPath		クロールを開始するパス
   - allowedPaths	パスに必ず含まれなければならない文字列のリスト
   - maxScrapeDepth	最大スクレイピング深度
+  - isTest			テストモードの真偽値
   - return) err		エラー
 
 ※ allowedPaths について
 ["/docs/", "/articles/"] なら "~/docs/abc", "~/articles/xyz" は許可されるが "~/blog/123" は許可されない
 ["/"] 指定であれば全て許可される
 */
-func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int) (err error) {
-	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
+func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int, isTest bool) (err error) {
 
 	// デフォルトのコレクターを作成
 	c := colly.NewCollector(
 		colly.AllowedDomains(targetDomain), // 許可するドメインを設定
 		colly.MaxDepth(maxScrapeDepth),     // 最大深度を設定
-		colly.CacheDir(collyCacheDir),      // キャッシュディレクトリを指定
 	)
+
+	// Colly のキャッシュディレクトリを設定（テストモード時はキャッシュしない）
+	if !isTest {
+		c.CacheDir = "./cache"
+	}
 
 	// リクエスト間で 1 秒の時間を空ける
 	c.Limit(&colly.LimitRule{
@@ -59,9 +64,11 @@ func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, m
 	})
 
 	// リクエスト前に "アクセス >> " を表示
-	// c.OnRequest(func(r *colly.Request) {
-	// 	log.Info(">> URL:" + r.URL.String())
-	// })
+	c.OnRequest(func(r *colly.Request) {
+		if isTest {
+			log.Info(">> URL:" + r.URL.String())
+		}
+	})
 
 	// html タグを見つけたときの処理
 	c.OnHTML("html", func(e *colly.HTMLElement) {
@@ -72,15 +79,25 @@ func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, m
 			return
 		}
 
+		if isTest {
+			log.Info(">> path:" + path)
+			log.Info(">> pageTitle:" + pageTitle)
+			log.Info(">> description:" + description)
+			log.Info(">> keywords:" + keywords)
+			// log.Info(">> markdown:" + markdown)
+			log.Info(">> hash:" + hash)
+			log.Info("\n")
+		}
+
 		// ハッシュ値を照合
-		exists, err := postgres.CheckHashExists(hash)
+		isHashExists, err := postgres.CheckHashExists(hash)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
-		if exists {
-			return // 既に保存されているハッシュがあればスキップ
+		if isHashExists && !isTest {
+			return // 既に保存されているハッシュがあればスキップ（テストモード時はスキップしない）
 		}
 
 		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
