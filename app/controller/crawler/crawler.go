@@ -10,17 +10,18 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// スケジューラーから呼び出すための関数、一旦定数などもここで設定
 func Start() (err error) {
 	// 初期設定・定数
-	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
-	startPath := "/"                           // クロールを開始するパス
-	allowedPaths := []string{                  // パスに必ず含まれなければならない文字列のリスト
+	targetDomain := "www.city.hamura.tokyo.jp"
+	startPath := "/"
+	allowedPaths := []string{
 		"/",
 	}
-	maxScrapeDepth := 7 // 最大スクレイピング深度を設定
+	maxScrapeDepth := 7
 
 	// クロールを開始
-	err = crawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth)
+	err = CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -31,18 +32,17 @@ func Start() (err error) {
 
 /*
 対象ドメインをクロールする関数
-
-※ allowedPaths について
-["/docs/", "/articles/"] なら "~/docs/abc", "~/articles/xyz" は許可されるが "~/blog/123" は許可されない
-["/"] 指定であれば全て許可される
-
   - targetDomain	クロール対象のドメイン
   - startPath		クロールを開始するパス
   - allowedPaths	パスに必ず含まれなければならない文字列のリスト
   - maxScrapeDepth	最大スクレイピング深度
   - return) err		エラー
+
+※ allowedPaths について
+["/docs/", "/articles/"] なら "~/docs/abc", "~/articles/xyz" は許可されるが "~/blog/123" は許可されない
+["/"] 指定であれば全て許可される
 */
-func crawlDomain(targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int) (err error) {
+func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int) (err error) {
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// デフォルトのコレクターを作成
