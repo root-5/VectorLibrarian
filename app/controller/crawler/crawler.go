@@ -13,11 +13,36 @@ import (
 func Start() (err error) {
 	// 初期設定・定数
 	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
-	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
-		// "/prsite/", // テスト用に PR サイトのみ対象に
+	startPath := "/"                           // クロールを開始するパス
+	allowedPaths := []string{                  // パスに必ず含まれなければならない文字列のリスト
 		"/",
 	}
-	maxScrapeDepth := 7        // 最大スクレイピング深度を設定
+	maxScrapeDepth := 7 // 最大スクレイピング深度を設定
+
+	// クロールを開始
+	err = crawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+/*
+対象ドメインをクロールする関数
+
+※ allowedPaths について
+["/docs/", "/articles/"] なら "~/docs/abc", "~/articles/xyz" は許可されるが "~/blog/123" は許可されない
+["/"] 指定であれば全て許可される
+
+  - targetDomain	クロール対象のドメイン
+  - startPath		クロールを開始するパス
+  - allowedPaths	パスに必ず含まれなければならない文字列のリスト
+  - maxScrapeDepth	最大スクレイピング深度
+  - return) err		エラー
+*/
+func crawlDomain(targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int) (err error) {
 	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
 
 	// デフォルトのコレクターを作成
@@ -43,6 +68,7 @@ func Start() (err error) {
 		// ページデータを抽出
 		domain, path, pageTitle, description, keywords, markdown, hash, err := htmlToPageData(e)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 
@@ -74,6 +100,7 @@ func Start() (err error) {
 		// ページデータをデータベースに保存
 		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash, vector)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 	})
@@ -91,7 +118,7 @@ func Start() (err error) {
 	})
 
 	// 指定ドメインからスクレイピングを開始
-	c.Visit("https://" + targetDomain + "/")
+	c.Visit("https://" + targetDomain + startPath)
 
 	return nil
 }
