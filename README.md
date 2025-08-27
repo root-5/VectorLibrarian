@@ -92,6 +92,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 - `docker compose exec app sh`: 開発環境コンテナ内でシェルを開く
 - `docker compose exec app go run main.go`: 開発環境コンテナ内でアプリケーションを実行
 - `docker compose exec app curl -X POST "http://nlp:8000/convert" -H "Content-Type: application/json" -d '{ "text": "これは日本語の文章です。", "is_query": true}'`: ベクトル化 API をテスト
+- `docker compose exec app go test ./controller/crawler`: 単体テストを実行
 
 ### db の Docker コマンド
 
