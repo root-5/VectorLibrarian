@@ -10,22 +10,52 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// スケジューラーから呼び出すための関数、一旦定数などもここで設定
 func Start() (err error) {
 	// 初期設定・定数
-	targetDomain := "www.city.hamura.tokyo.jp" // ターゲットドメインを設定
-	allowedPaths := []string{                  // URLパスの制限（特定のパス以外をスキップ）
-		// "/prsite/", // テスト用に PR サイトのみ対象に
+	targetDomain := "www.city.hamura.tokyo.jp"
+	startPath := "/"
+	allowedPaths := []string{
 		"/",
 	}
-	maxScrapeDepth := 7        // 最大スクレイピング深度を設定
-	collyCacheDir := "./cache" // Colly のキャッシュディレクトリを設定
+	maxScrapeDepth := 7
+	isTest := false
+
+	// クロールを開始
+	err = CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth, isTest)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+/*
+対象ドメインをクロールする関数
+  - targetDomain	クロール対象のドメイン
+  - startPath		クロールを開始するパス
+  - allowedPaths	パスに必ず含まれなければならない文字列のリスト
+  - maxScrapeDepth	最大スクレイピング深度
+  - isTest			テストモードの真偽値
+  - return) err		エラー
+
+※ allowedPaths について
+["/docs/", "/articles/"] なら "~/docs/abc", "~/articles/xyz" は許可されるが "~/blog/123" は許可されない
+["/"] 指定であれば全て許可される
+*/
+func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int, isTest bool) (err error) {
 
 	// デフォルトのコレクターを作成
 	c := colly.NewCollector(
 		colly.AllowedDomains(targetDomain), // 許可するドメインを設定
 		colly.MaxDepth(maxScrapeDepth),     // 最大深度を設定
-		colly.CacheDir(collyCacheDir),      // キャッシュディレクトリを指定
 	)
+
+	// Colly のキャッシュディレクトリを設定（テストモード時はキャッシュしない）
+	if !isTest {
+		c.CacheDir = "./cache"
+	}
 
 	// リクエスト間で 1 秒の時間を空ける
 	c.Limit(&colly.LimitRule{
@@ -34,31 +64,44 @@ func Start() (err error) {
 	})
 
 	// リクエスト前に "アクセス >> " を表示
-	// c.OnRequest(func(r *colly.Request) {
-	// 	log.Info(">> URL:" + r.URL.String())
-	// })
+	c.OnRequest(func(r *colly.Request) {
+		if isTest {
+			log.Info(">> URL:" + r.URL.String())
+		}
+	})
 
 	// html タグを見つけたときの処理
 	c.OnHTML("html", func(e *colly.HTMLElement) {
 		// ページデータを抽出
 		domain, path, pageTitle, description, keywords, markdown, hash, err := htmlToPageData(e)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 
+		if isTest {
+			log.Info(">> path:" + path)
+			log.Info(">> pageTitle:" + pageTitle)
+			log.Info(">> description:" + description)
+			log.Info(">> keywords:" + keywords)
+			// log.Info(">> markdown:" + markdown)
+			log.Info(">> hash:" + hash)
+			log.Info("\n")
+		}
+
 		// ハッシュ値を照合
-		exists, err := postgres.CheckHashExists(hash)
+		isHashExists, err := postgres.CheckHashExists(hash)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
-		if exists {
-			return // 既に保存されているハッシュがあればスキップ
+		if isHashExists && !isTest {
+			return // 既に保存されているハッシュがあればスキップ（テストモード時はスキップしない）
 		}
 
 		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
-		itemization := ExtractHeadings(markdown)
+		itemization := extractHeadings(markdown)
 		targetText := "## page title\n\n" + pageTitle +
 			// "\n\n## page description\n\n" + description +
 			// "\n\n## page keywords\n\n" + keywords +
@@ -74,6 +117,7 @@ func Start() (err error) {
 		// ページデータをデータベースに保存
 		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash, vector)
 		if err != nil {
+			log.Error(err)
 			return
 		}
 	})
@@ -91,7 +135,7 @@ func Start() (err error) {
 	})
 
 	// 指定ドメインからスクレイピングを開始
-	c.Visit("https://" + targetDomain + "/")
+	c.Visit("https://" + targetDomain + startPath)
 
 	return nil
 }

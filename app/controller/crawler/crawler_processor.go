@@ -133,7 +133,7 @@ func validateAndFormatLinkUrl(e *colly.HTMLElement, targetDomain string, allowed
   - markdown	マークダウン形式のテキスト
   - return)		見出しを箇条書き形式にした文字列
 */
-func ExtractHeadings(markdown string) (itemizationStr string) {
+func extractHeadings(markdown string) (itemizationStr string) {
 	// 正規表現で見出しを抽出
 	re := regexp.MustCompile(`(?m)^(#{1,6})\s+(.*)$`)
 	matches := re.FindAllStringSubmatch(markdown, -1)
