@@ -4,12 +4,33 @@ import (
 	"app/controller/api"
 	"app/controller/log"
 	"app/controller/postgres"
+	"app/test"
 	"app/usecase/scheduler"
+	"flag"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
+	// flag パッケージを使ってモードを指定できるようにする
+	mode := flag.String("mode", "normal", "execution mode: normal or test")
+	flag.Parse()
+
+	switch *mode {
+	case "test":
+		// -mode=test を指定した場合の処理
+		runTestMode()
+	default:
+		run()
+	}
+}
+
+func runTestMode() {
+	log.Info("テストモード起動")
+	test.Start()
+}
+
+func run() {
 	// =======================================================================
 	// データベース接続とテーブル初期化
 	// =======================================================================
