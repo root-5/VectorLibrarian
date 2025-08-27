@@ -84,7 +84,7 @@ func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, m
 		}
 
 		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
-		itemization := ExtractHeadings(markdown)
+		itemization := extractHeadings(markdown)
 		targetText := "## page title\n\n" + pageTitle +
 			// "\n\n## page description\n\n" + description +
 			// "\n\n## page keywords\n\n" + keywords +

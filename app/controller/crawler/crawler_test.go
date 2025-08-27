@@ -55,7 +55,7 @@ More text.
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := ExtractHeadings(tc.markdown)
+			actual := extractHeadings(tc.markdown)
 			if actual != tc.expected {
 				t.Errorf("期待値:\n%s\n実際:\n%s", tc.expected, actual)
 			}
