@@ -21,6 +21,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 - [アイディア](./documents/アイディア.md)
 - [テーブル設計](./documents/テーブル設計.md)
 - [使用ツールとライブラリ](./documents/使用ツールとライブラリ.md)
+- [実行したコマンドメモ](./documents/実行したコマンドメモ.md)
 - [全体構造](./documents/全体構造.md)
 
 ## タスク
@@ -33,6 +34,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
   - [ ] markdown 入力時の精度検証
   - [ ] multilingual の別モデルを試す
 - [ ] CI/CD 強化
+  - [x] 頻繁にトライ&エラーが発生する箇所に単体テストとテストモードを追加
   - [ ] ベクトルデータは単独のテーブルとして切り出して、モデル切り替え時にテーブルごと入れ替えられるようにする
   - [ ] main ブランチを使用したデプロイ自動化
 - [ ] 検索機能改善
@@ -49,36 +51,6 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
   - [ ] GCP 化
   - [ ] Terraform での構築？
 
-## 実行コマンド
-
-### app の実行コマンド記録
-
-1. `go mod init github.com/root-5/VectorLibrarian`: モジュールの初期化
-2. `go get github.com/gocolly/colly/v2`: クローリングライブラリのインストール
-3. `go run main.go`: アプリケーションの実行
-4. `go get -u github.com/JohannesKaufmann/html-to-markdown/v2`: HTMLをマークダウンに変換するライブラリのインストール
-5. `go mod tidy`: 依存関係の整理
-6. `npm install -g @google/gemini-cli`: Gemini CLI のインストール（Node はインストール済み）
-7. `go get github.com/lib/pq`: PostgreSQL ドライバのインストール（Gemini CLI が実行）
-8. `go get github.com/uptrace/bun`: Bun ORM のインストール
-9. `go get github.com/uptrace/bun/dialect/pgdialect`: PostgreSQL 用の Bun ダイアレクトのインストール
-10. `go get github.com/uptrace/bun/driver/pgdriver`: PostgreSQL ドライバのインストール
-11. `go mod tidy`: 依存関係の整理、便宜上最後のコマンドとして記載しているがライブラリのインストール後に適宜実行した
-
-### nlp の実行コマンド記録
-
-1. `uv init`: uv の初期化
-2. `uv add transformers`: transformers の追加
-3. `uv add optimum`: optimum の追加
-4. `uv add onnx`: onnx の追加
-5. `uv add onnxruntime`: onnxruntime の追加
-6. `uv add tokenizers`: tokenizers の追加
-7. `uv add "huggingface_hub[cli]"`: huggingface_hub[cli] の追加
-8. `uv run main.py`: main.py の実行
-9. `go mod init github.com/root-5/VectorLibrarian/nlp`: モジュールの初期化
-10. `go get github.com/yalue/onnxruntime_go`: ONNX Runtime Go ライブラリのインストール
-11. `go get github.com/daulet/tokenizers`: トークナイザライブラリのインストール
-
 ## Docker 関係コマンド
 
 - `docker compose up -d`: 開発環境コンテナの起動
@@ -87,7 +59,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 - `docker-compose -f="compose.prod.yml" up -d`: 本番環境コンテナの起動
 - `docker-compose -f="compose.prod.yml" down`: 本番環境コンテナの停止
 
-### app の Docker コマンド
+### app コンテナ用
 
 - `docker compose exec app sh`: 開発環境コンテナ内でシェルを開く
 - `docker compose exec app go run main.go`: 開発環境コンテナ内でアプリケーションを実行
@@ -95,7 +67,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 - `docker compose exec app go test ./controller/crawler`: 単体テストを実行
 - `docker compose exec app go run main.go -mode=test`: テストモードでアプリケーションを実行（統合的なテスト用）
 
-### db の Docker コマンド
+### db コンテナ用
 
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'`: 開発環境コンテナ内で PostgreSQL に接続
   - `SELECT * FROM pages;`: データベースの内容を確認
@@ -103,7 +75,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 - `docker compose exec db sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backup/backup_$(date +%Y-%m-%d_%H-%M).sql'`: データベースのバックアップを取得
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB < /backup/backup.sql'`: データベースのバックアップを復元
 
-### nlp の Docker コマンド
+### nlp コンテナ用
 
 - `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く
   - `curl -X POST "http://localhost:8000/convert" -H "Content-Type: application/json" -d '{ "text": "これは日本語の文章です。", "is_query": true}'`: ベクトル化 API をテスト
