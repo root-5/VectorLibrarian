@@ -5,6 +5,7 @@ import (
 	"app/controller/log"
 	"app/domain/model"
 	"context"
+	"unicode/utf8"
 )
 
 /*
@@ -38,22 +39,12 @@ func CheckHashExists(hash string) (exists bool, err error) {
   - return) err	エラー
 */
 func SaveCrawledData(domain, path, title, description, keywords, markdown, hash string, vector []float32) (err error) {
-	// 文字列の長さが制限を超えている場合は切り詰める
-	if len(domain) > 100 {
-		domain = domain[:100]
-	}
-	if len(path) > 255 {
-		path = path[:255]
-	}
-	if len(title) > 100 {
-		title = title[:100]
-	}
-	if len(description) > 255 {
-		description = description[:255]
-	}
-	if len(keywords) > 255 {
-		keywords = keywords[:255]
-	}
+	// 文字列の長さが制限を超えている場合は UTF-8 安全に切り詰める
+	domain = truncateRunes(domain, 100)
+	path = truncateRunes(path, 255)
+	title = truncateRunes(title, 100)
+	description = truncateRunes(description, 255)
+	keywords = truncateRunes(keywords, 255)
 
 	// pages テーブルのモデルを作成
 	page := &model.Page{
@@ -85,4 +76,13 @@ func SaveCrawledData(domain, path, title, description, keywords, markdown, hash 
 	}
 
 	return nil
+}
+
+// UTF-8 安全に文字数で切り詰めるヘルパー関数
+func truncateRunes(s string, max int) string {
+	if utf8.RuneCountInString(s) <= max {
+		return s
+	}
+	r := []rune(s)
+	return string(r[:max])
 }

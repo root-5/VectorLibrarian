@@ -33,6 +33,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
   - [ ] markdown 入力時の精度検証
   - [ ] multilingual の別モデルを試す
 - [ ] CI/CD 強化
+  - [ ] ベクトルデータは単独のテーブルとして切り出して、モデル切り替え時にテーブルごと入れ替えられるようにする
   - [ ] main ブランチを使用したデプロイ自動化
 - [ ] 検索機能改善
   - [ ] 全文検索など他の検索機能との統合
@@ -50,7 +51,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 
 ## 実行コマンド
 
-### app の実行コマンド
+### app の実行コマンド記録
 
 1. `go mod init github.com/root-5/VectorLibrarian`: モジュールの初期化
 2. `go get github.com/gocolly/colly/v2`: クローリングライブラリのインストール
@@ -64,7 +65,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 10. `go get github.com/uptrace/bun/driver/pgdriver`: PostgreSQL ドライバのインストール
 11. `go mod tidy`: 依存関係の整理、便宜上最後のコマンドとして記載しているがライブラリのインストール後に適宜実行した
 
-### nlp の実行コマンド
+### nlp の実行コマンド記録
 
 1. `uv init`: uv の初期化
 2. `uv add transformers`: transformers の追加
