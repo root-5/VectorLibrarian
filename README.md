@@ -51,13 +51,21 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
   - [ ] GCP 化
   - [ ] Terraform での構築？
 
-## Docker 関係コマンド
+## コマンド
 
 - `docker compose up -d`: 開発環境コンテナの起動
 - `docker compose down`: 開発環境コンテナの停止
 - `docker compose down --rmi all`: 開発環境コンテナの停止とイメージの削除
 - `docker-compose -f="compose.prod.yml" up -d`: 本番環境コンテナの起動
 - `docker-compose -f="compose.prod.yml" down`: 本番環境コンテナの停止
+
+### バックアップ
+
+コード、DBデータ、クローラーキャッシュ等全データバックアップ
+
+```sh
+sudo cp -rp VectorLibrarian VectorLibrarian.backup.`date "+%Y-%m-%d_%H-%M"`
+```
 
 ### app コンテナ用
 
