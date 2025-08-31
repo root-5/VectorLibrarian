@@ -16,7 +16,18 @@ import (
   - return) err		エラー
 */
 func VectorSearch(query string, limit int) (similarPages []model.Page, err error) {
-	vector, _ := nlp.ConvertToVector(query, false)
+	_, vectors, _ := nlp.ConvertToVector(query, false)
+
+	// 検索用にベクトルを一つにまとめる（平均を取る）
+	vector := vectors[0]
+	for i := 1; i < len(vectors); i++ {
+		for j := 0; j < len(vectors[i]); j++ {
+			vector[j] += vectors[i][j]
+		}
+	}
+	for i := 0; i < len(vector); i++ {
+		vector[i] /= float32(len(vectors))
+	}
 
 	similarPages, err = postgres.GetSimilarPages(vector, limit)
 	if err != nil {

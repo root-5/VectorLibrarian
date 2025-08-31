@@ -16,12 +16,13 @@ type ConvertRequest struct {
 
 // NLPサーバーからのレスポンス用の構造体
 type ConvertResponse struct {
-	InputText      string    `json:"input_text"`
-	NormalizedText string    `json:"normalized_text"`
-	IsQuery        bool      `json:"is_query"`
-	ModelName      string    `json:"model_name"`
-	Dimensions     int       `json:"dimensions"`
-	Vector         []float32 `json:"vector"`
+	// InputText      string      `json:"input_text"`
+	// NormalizedText string      `json:"normalized_text"`
+	// IsQuery        bool        `json:"is_query"`
+	// ModelName      string      `json:"model_name"`
+	// Dimensions     int         `json:"dimensions"`
+	Chunks  []string    `json:"chunks"`
+	Vectors [][]float32 `json:"vectors"`
 }
 
 /*
@@ -31,7 +32,7 @@ nlp サーバーにテキストを送信してベクトルに変換する関数
   - isQuery)	クエリかどうかの真偽値（True なら「query: 」、False なら「passage: 」のプレフィックスが文頭に付与される）
   - return)		変換結果の構造体とエラー
 */
-func ConvertToVector(text string, isQuery bool) ([]float32, error) {
+func ConvertToVector(text string, isQuery bool) (chunks []string, vectors [][]float32, err error) {
 	// リクエストボディを作成
 	requestBody := ConvertRequest{
 		Text:    text,
@@ -41,14 +42,14 @@ func ConvertToVector(text string, isQuery bool) ([]float32, error) {
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	// POSTリクエストを送信
 	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":8000/convert", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
@@ -56,8 +57,10 @@ func ConvertToVector(text string, isQuery bool) ([]float32, error) {
 	var result ConvertResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
+	chunks = result.Chunks
+	vectors = result.Vectors
 
-	return result.Vector, nil
+	return chunks, vectors, nil
 }
