@@ -16,7 +16,7 @@ import (
   - return) err		エラー
 */
 func VectorSearch(query string, limit int) (similarPages []model.Page, err error) {
-	_, vectors, _ := nlp.ConvertToVector(query, false)
+	_, _, _, _, _, vectors, _ := nlp.ConvertToVector(query, false)
 
 	// 検索用にベクトルを一つにまとめる（平均を取る）
 	vector := vectors[0]
