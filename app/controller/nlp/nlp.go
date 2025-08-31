@@ -15,12 +15,8 @@ type ConvertRequest struct {
 }
 
 // NLPサーバーからのレスポンス用の構造体
+// nlp/api/api.go と同じ構造体
 type ConvertResponse struct {
-	// InputText      string      `json:"input_text"`
-	// NormalizedText string      `json:"normalized_text"`
-	// IsQuery        bool        `json:"is_query"`
-	// ModelName      string      `json:"model_name"`
-	// Dimensions     int         `json:"dimensions"`
 	MaxTokenLength     int         `json:"max_token_length"`
 	OverlapTokenLength int         `json:"overlap_token_length"`
 	ModelName          string      `json:"model_name"`

@@ -24,6 +24,7 @@ type ConvertRequest struct {
 }
 
 // NLPサーバーからのレスポンス用の構造体
+// app/controller/nlp/nlp.go と同じ構造体
 type ConvertResponse struct {
 	MaxTokenLength     int         `json:"max_token_length"`
 	OverlapTokenLength int         `json:"overlap_token_length"`
