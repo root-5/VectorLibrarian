@@ -23,7 +23,8 @@ type ConvertRequest struct {
 
 // NLPサーバーからのレスポンス用の構造体
 type ConvertResponse struct {
-	Vector [][]float32 `json:"vector"`
+	Chunks []string    `json:"chunks"`
+	Vectors [][]float32 `json:"vectors"`
 }
 
 // ====================================================================================
@@ -66,26 +67,14 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var err error
-		vectors := [][]float32{}
-		if req.IsQuery {
-			var vector []float32
-			vector, err = vectorize.QueryToVector(req.Text)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("ベクトル化エラー: %v", err), http.StatusInternalServerError)
-				return
-			}
-			vectors = append(vectors, vector)
-		} else {
-			vectors, err = vectorize.MarkdownToVector(req.Text)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("ベクトル化エラー: %v", err), http.StatusInternalServerError)
-				return
-			}
+		chunks, vectors, err := vectorize.ConvertToVector(req.Text, req.IsQuery)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("ベクトル化エラー: %v", err), http.StatusInternalServerError)
+			return
 		}
 
 		// レスポンスを構造体に変換
-		response := ConvertResponse{Vector: vectors}
+		response := ConvertResponse{Chunks: chunks, Vectors: vectors}
 
 		// レスポンスをJSON形式で返す
 		w.Header().Set("Content-Type", "application/json")

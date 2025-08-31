@@ -4,60 +4,43 @@ import (
 	"fmt"
 )
 
-func MarkdownToVector(markdown string) (vectors [][]float32, err error) {
-	// マークダウンのリンクを置換
-	replacedMarkdown := replaceLinks(markdown)
+func ConvertToVector(text string, isQuery bool) (chunks []string, vectors [][]float32, err error) {
+	if !isQuery {
+		// マークダウンのリンクを置換
+		text = replaceLinks(text)
+	}
 
 	// テキストを正規化
-	text := normalizeText(replacedMarkdown)
+	normalizedText := normalizeText(text)
 
 	// テキストを分割（チャンキング）
-	sentences := chunkText(text, 512, 128)
+	chunks = chunkText(normalizedText, 512-3, 103) // -3 はプレフィックス分、-103 はオーバーラップ
 
-	// Initialize vectors slice with the length of sentences
-	vectors = make([][]float32, len(sentences))
+	// チャンク数分のスライスを確保
+	vectors = make([][]float32, len(chunks))
 
-	for i, sentence := range sentences {
+	for i, chunk := range chunks {
 		// プレフィックスの付与
-		sentence = "passage: " + sentence
+		if isQuery {
+			chunk = "query: " + chunk
+		} else {
+			chunk = "passage: " + chunk
+		}
 
 		// トークン化
-		ids, err := tokenize(sentence)
+		ids, err := tokenize(chunk)
 		if err != nil {
 			fmt.Printf("トークナイズエラー: %v\n", err)
-			return nil, err
+			return nil, nil, err
 		}
 
 		// ベクトル化
 		vectors[i], err = vectorize(ids)
 		if err != nil {
 			fmt.Printf("ONNX推論実行エラー: %v\n", err)
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	return vectors, nil
-}
-
-func QueryToVector(text string) (vector []float32, err error) {
-	// テキストを正規化
-	text = normalizeText(text)
-
-	// プレフィックスの付与
-	text = "query: " + text
-
-	// トークン化
-	ids, err := tokenize(text)
-	if err != nil {
-		fmt.Printf("トークナイズエラー: %v\n", err)
-		return nil, err
-	}
-
-	// ベクトル化
-	vector, err = vectorize(ids)
-	if err != nil {
-		fmt.Printf("ONNX推論実行エラー: %v\n", err)
-		return nil, err
-	}
-	return vector, nil
+	return chunks, vectors, nil
 }
