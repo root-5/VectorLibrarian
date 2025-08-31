@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 
 	"nlp/vectorize"
 )
@@ -23,8 +25,11 @@ type ConvertRequest struct {
 
 // NLPサーバーからのレスポンス用の構造体
 type ConvertResponse struct {
-	Chunks []string    `json:"chunks"`
-	Vectors [][]float32 `json:"vectors"`
+	MaxTokenLength     int         `json:"max_token_length"`
+	OverlapTokenLength int         `json:"overlap_token_length"`
+	ModelName          string      `json:"model_name"`
+	Chunks             []string    `json:"chunks"`
+	Vectors            [][]float32 `json:"vectors"`
 }
 
 // ====================================================================================
@@ -63,18 +68,42 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 
 		// リクエストボディを構造体に変換
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			fmt.Printf("リクエストボディのデコードエラー: %v\n", err)
 			http.Error(w, "無効なリクエストボディ", http.StatusBadRequest)
 			return
 		}
 
 		chunks, vectors, err := vectorize.ConvertToVector(req.Text, req.IsQuery)
 		if err != nil {
+			fmt.Printf("ベクトル化エラー: %v\n", err)
 			http.Error(w, fmt.Sprintf("ベクトル化エラー: %v", err), http.StatusInternalServerError)
 			return
 		}
 
+		// 環境変数からの値を取得し、整数に変換
+		maxTokenLengthStr := os.Getenv("MAX_TOKEN_LENGTH")
+		overlapTokenLengthStr := os.Getenv("OVERLAP_TOKEN_LENGTH")
+		maxTokenLength, err := strconv.Atoi(maxTokenLengthStr)
+		if err != nil {
+			fmt.Printf("MAX_TOKEN_LENGTH の変換エラー: %v\n", err)
+			http.Error(w, fmt.Sprintf("MAX_TOKEN_LENGTH の変換エラー: %v", err), http.StatusInternalServerError)
+			return
+		}
+		overlapTokenLength, err := strconv.Atoi(overlapTokenLengthStr)
+		if err != nil {
+			fmt.Printf("OVERLAP_TOKEN_LENGTH の変換エラー: %v\n", err)
+			http.Error(w, fmt.Sprintf("OVERLAP_TOKEN_LENGTH の変換エラー: %v", err), http.StatusInternalServerError)
+			return
+		}
+
 		// レスポンスを構造体に変換
-		response := ConvertResponse{Chunks: chunks, Vectors: vectors}
+		response := ConvertResponse{
+			MaxTokenLength:     maxTokenLength,
+			OverlapTokenLength: overlapTokenLength,
+			ModelName:          os.Getenv("MODEL_NAME"),
+			Chunks:             chunks,
+			Vectors:            vectors,
+		}
 
 		// レスポンスをJSON形式で返す
 		w.Header().Set("Content-Type", "application/json")

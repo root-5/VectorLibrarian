@@ -122,8 +122,16 @@ func tokenize(text string) (ids []uint32, err error) {
 		return nil, err
 	}
 
-	// 512 は BERT 系モデルの最大トークン数、トランケーション（長すぎるトークンの切り捨て）方向は右側
-	tk, err := tokenizers.FromBytesWithTruncation(tokenizerData, 512, tokenizers.TruncationDirectionRight)
+	// 最大トークン数を環境変数から取得
+	maxTokenLengthStr := os.Getenv("MAX_TOKEN_LENGTH")
+	maxTokenLength, err := strconv.ParseUint(maxTokenLengthStr, 10, 32)
+	if err != nil {
+		fmt.Printf("MAX_TOKEN_LENGTH の変換エラー: %v\n", err)
+		return nil, err
+	}
+
+	// トランケーション（長すぎるトークンの切り捨て）方向は右側
+	tk, err := tokenizers.FromBytesWithTruncation(tokenizerData, uint32(maxTokenLength), tokenizers.TruncationDirectionRight)
 	if err != nil {
 		fmt.Printf("tokenizer.json ロードエラー: %v\n", err)
 		return nil, err

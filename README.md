@@ -33,6 +33,7 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
   - [x] トークン上限の確認
   - [ ] markdown 入力時の精度検証
   - [ ] multilingual の別モデルを試す
+  - [x] nlp の API レスポンスにモデル名等も含める
 - [ ] CI/CD 強化
   - [x] 頻繁にトライ&エラーが発生する箇所に単体テストとテストモードを追加
   - [ ] ベクトルデータは単独のテーブルとして切り出して、モデル切り替え時にテーブルごと入れ替えられるようにする
@@ -87,3 +88,4 @@ sudo cp -rp VectorLibrarian VectorLibrarian.backup.`date "+%Y-%m-%d_%H-%M"`
 
 - `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く
   - `curl -X POST "http://localhost:8000/convert" -H "Content-Type: application/json" -d '{ "text": "これは日本語の文章です。", "is_query": true}'`: ベクトル化 API をテスト
+- `docker compose exec nlp go test ./vectorize`: 単体テストを実行
