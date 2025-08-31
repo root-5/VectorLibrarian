@@ -144,6 +144,8 @@ predictor = model.deploy(
 
 Golang にはトークン化の公式や強力なライブラリが存在しないため、 github.com/daulet/tokenizers を利用した。以下の方法でのトークン化も試したが、未実装だったり python の tokenizers と同様の結果にならなかったので断念。
 
+トークン数のテスト: <https://huggingface.co/spaces/Xenova/the-tokenizer-playground>
+
 - github.com/sugarme/tokenizer
 - AI サポートによる自作
 
