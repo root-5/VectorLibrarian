@@ -150,10 +150,10 @@ func tokenize(text string) (ids []uint32, err error) {
 
 // ONNX推論用のヘルパー関数
 func vectorize(tokenIds []uint32) (sentenceVector []float32, err error) {
-	tensorLengthStr := os.Getenv("TENSOR_LENGTH")
-	tensorLength, err := strconv.ParseInt(tensorLengthStr, 10, 64)
+	modelVectorLengthStr := os.Getenv("MODEL_VECTOR_LENGTH")
+	modelVectorLength, err := strconv.ParseInt(modelVectorLengthStr, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("TENSOR_LENGTH 環境変数が設定されていないか無効です: %v", err)
+		return nil, fmt.Errorf("MODEL_VECTOR_LENGTH 環境変数が設定されていないか無効です: %v", err)
 	}
 	onnxruntimePath := os.Getenv("LIBRARY_PATH") + "/libonnxruntime.so"
 	modelPath := os.Getenv("DOWNLOAD_DIR") + "/" + os.Getenv("SAVED_MODEL_PATH")
@@ -191,7 +191,7 @@ func vectorize(tokenIds []uint32) (sentenceVector []float32, err error) {
 	defer attentionMaskTensor.Destroy()
 
 	// 出力テンソルの形状: [batch_size, sequence_length, hidden_size]
-	outputShape := onnxruntime_go.NewShape(1, int64(len(tokenIds)), tensorLength)
+	outputShape := onnxruntime_go.NewShape(1, int64(len(tokenIds)), modelVectorLength)
 	outputTensor, err := onnxruntime_go.NewEmptyTensor[float32](outputShape)
 	if err != nil {
 		return nil, fmt.Errorf("出力テンソルの作成に失敗しました: %v", err)
@@ -220,7 +220,7 @@ func vectorize(tokenIds []uint32) (sentenceVector []float32, err error) {
 	outputData := outputTensor.GetData()
 
 	// 各トークンの埋め込みを平均化して文全体の埋め込みを計算、マスクは考慮しない（すべてのトークンが有効と仮定）
-	hiddenSize := int(tensorLength) // モデルの隠れ層の次元数
+	hiddenSize := int(modelVectorLength) // モデルの隠れ層の次元数
 	sentenceVector = make([]float32, hiddenSize)
 	for i := 0; i < hiddenSize; i++ {
 		for j := 0; j < len(tokenIds); j++ {
