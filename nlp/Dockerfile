@@ -22,7 +22,7 @@ ENV MODEL_NAME="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" \
     SAVED_TOKENIZER_PATH="tokenizer.json" \
     MODEL_VERSION="86741b4e3f5cb7765a600d3a3d55a0f6a6cb443d" \
     MAX_TOKEN_LENGTH=512 \
-    OVERLAP_TOKEN_LENGTH=103 \
+    OVERLAP_TOKEN_LENGTH=128 \
     MODEL_VECTOR_LENGTH=384
 
 # ONNX モデルとトークナイザーのダウンロード
