@@ -54,7 +54,7 @@ func ConvertToVector(text string, isQuery bool) (
 	}
 
 	// POSTリクエストを送信
-	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":8000/convert", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":"+os.Getenv("NLP_PORT")+"/convert", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Error(err)
 		return 0, 0, "", 0, nil, nil, err
@@ -68,12 +68,6 @@ func ConvertToVector(text string, isQuery bool) (
 		return 0, 0, "", 0, nil, nil, err
 	}
 
-	maxTokenLength = result.MaxTokenLength
-	overlapTokenLength = result.OverlapTokenLength
-	modelName = result.ModelName
-	modelVectorLength = result.ModelVectorLength
-	chunks = result.Chunks
-	vectors = result.Vectors
-
-	return maxTokenLength, overlapTokenLength, modelName, modelVectorLength, chunks, vectors, nil
+	return result.MaxTokenLength, result.OverlapTokenLength, result.ModelName,
+		result.ModelVectorLength, result.Chunks, result.Vectors, nil
 }
