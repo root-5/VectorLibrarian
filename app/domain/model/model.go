@@ -1,72 +1,48 @@
+// ドメイン（業務知識）のデータ構造を定義するパッケージ
 package model
 
-import (
-	"time"
+/*
+bun: は ORM が利用するタグ
+json: は API のレスポンスを生成時に使用されるタグ
+ドメイン層にはタグが無いべきだが、そうすると重複した記述が entity 側に生じ、ドメインを分離した意味が薄れるため妥協している
+*/
 
-	"github.com/uptrace/bun"
-)
-
-// ドメイン情報
-// type Domain struct {
-// 	bun.BaseModel `bun:"table:headings"`
-// }
+// URLドメイン情報
+type Domain struct {
+	Domain string `bun:"domain,notnull,unique:url,type:varchar(100)" json:"domain"` // ドメイン
+}
 
 // ページコンテンツ情報
 type Page struct {
-	bun.BaseModel `bun:"table:pages"`
-
-	Id          int64     `bun:"id,pk,autoincrement" json:"-"`                                          // ID
-	Domain      string    `bun:"domain,notnull,unique:url,type:varchar(100)" json:"domain"`             // ドメイン
-	Path        string    `bun:"path,notnull,unique:url,type:varchar(255)" json:"path"`                 // パス
-	Title       string    `bun:"title,notnull,type:varchar(100)" json:"title"`                          // ページタイトル
-	Description string    `bun:"description,notnull,type:varchar(255)" json:"description"`              // ディスクリプション
-	Keywords    string    `bun:"keywords,notnull,type:varchar(255)" json:"keywords"`                    // キーワード
-	Markdown    string    `bun:"markdown,notnull,type:text" json:"markdown"`                            // Markdown コンテンツ
-	Hash        string    `bun:"hash,notnull,type:char(64)" json:"-"`                                   // コンテンツのハッシュ値
-	CreatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"-"`          // 作成日時
-	UpdatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"updated_at"` // 更新日時
-	DeletedAt   time.Time `bun:",soft_delete,type:timestamptz" json:"-"`                                // 削除日時
+	DomainId    int64  `bun:"domain_id,notnull,type:int"`                               // ドメインID
+	Path        string `bun:"path,notnull,unique:url,type:varchar(255)" json:"path"`    // パス
+	Title       string `bun:"title,notnull,type:varchar(100)" json:"title"`             // ページタイトル
+	Description string `bun:"description,notnull,type:varchar(255)" json:"description"` // ディスクリプション
+	Keywords    string `bun:"keywords,notnull,type:varchar(255)" json:"keywords"`       // キーワード
+	Markdown    string `bun:"markdown,notnull,type:text" json:"markdown"`               // Markdown コンテンツ
+	Hash        string `bun:"hash,notnull,type:char(64)" json:"-"`                      // コンテンツのハッシュ値
 }
 
 // チャンク情報
 type Chunk struct {
-	bun.BaseModel `bun:"table:chunks"`
-
-	Id          int64     `bun:"id,pk,autoincrement"`                                 // ID
-	PageId      int64     `bun:"page_id,notnull,type:int"`                            // ページID
-	NLPConfigId int64     `bun:"nlp_config_id,notnull,type:int"`                      // NLP設定ID
-	Chunk       string    `bun:"chunk,notnull,type:text"`                             // チャンク
-	CreatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
-	UpdatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
-	DeletedAt   time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
+	Chunk       string `bun:"chunk,notnull,type:text"`        // チャンク
+	PageId      int64  `bun:"page_id,notnull,type:int"`       // ページID
+	NlpConfigId int64  `bun:"nlp_config_id,notnull,type:int"` // NLP設定ID
 }
 
 // ベクトル情報
-// 一つの対象に複数モデルによって複数ベクトルが作られることが想定されるため、ベクトルのテーブルは独立しているべき
 type Vector struct {
-	bun.BaseModel `bun:"table:vectors"`
-
-	Id          int64     `bun:"id,pk,autoincrement"`                                 // ID
-	ChunkId     int64     `bun:"chunk_id,notnull,type:int"`                           // チャンクID
-	NLPConfigId int64     `bun:"nlp_config_id,notnull,type:int"`                      // NLP設定ID
-	Vector      []float32 `bun:"vector,notnull,type:vector(384)"`                     // ベクトルデータ（モデルの次元数に合わせて変更）
-	CreatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
-	UpdatedAt   time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
-	DeletedAt   time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
+	Vector      []float32 `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
+	ChunkId     int64     `bun:"chunk_id,notnull,type:int"`       // チャンクID
+	NlpConfigId int64     `bun:"nlp_config_id,notnull,type:int"`  // NLP設定ID
 }
 
 // NLP設定情報
-type NLPConfig struct {
-	bun.BaseModel `bun:"table:nlp_configs"`
-
-	Id                 int64     `bun:"id,pk,autoincrement"`                                 // ID
-	MaxTokenLength     int64     `bun:"max_token_length,notnull,type:int"`                   // 最大トークン長
-	OverlapTokenLength int64     `bun:"overlap_token_length,notnull,type:int"`               // オーバーラップトークン長
-	ModelName          string    `bun:"model_name,notnull,type:varchar(100)"`                // モデル名
-	ModelVectorLength  int64     `bun:"model_vector_length,notnull,type:int"`                // モデルのベクトル長
-	CreatedAt          time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
-	UpdatedAt          time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
-	DeletedAt          time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
+type NlpConfig struct {
+	MaxTokenLength     int64  `bun:"max_token_length,notnull,type:int"`     // 最大トークン長
+	OverlapTokenLength int64  `bun:"overlap_token_length,notnull,type:int"` // オーバーラップトークン長
+	ModelName          string `bun:"model_name,notnull,type:varchar(100)"`  // モデル名
+	ModelVectorLength  int64  `bun:"model_vector_length,notnull,type:int"`  // モデルのベクトル長
 }
 
 // 検索履歴情報
