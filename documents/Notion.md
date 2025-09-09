@@ -32,9 +32,9 @@
 
 ```go
 type User struct {
- Id        int64     `bun:"id,pk,autoincrement"`
- Name      string    `bun:"name,type:varchar(50),notnull"`
- Email     string    `bun:"email,type:varchar(100),unique,notnull"`
+  Id        int64     `bun:"id,pk,autoincrement"`
+  Name      string    `bun:"name,type:varchar(50),notnull"`
+  Email     string    `bun:"email,type:varchar(100),unique,notnull"`
 }
 ```
 
@@ -42,25 +42,25 @@ type User struct {
 
 ```go
 type PageContentBase struct {
- Domain      sql.NullString
- Path        sql.NullString
- Title       sql.NullString
- Description sql.NullString
- Keywords    sql.NullString
- Markdown    sql.NullString
- Hash        sql.NullString
+  Domain      sql.NullString
+  Path        sql.NullString
+  Title       sql.NullString
+  Description sql.NullString
+  Keywords    sql.NullString
+  Markdown    sql.NullString
+  Hash        sql.NullString
 }
 
 type PageContentInsert struct {
- PageContentBase
- CreatedAt sql.NullTime
- UpdatedAt sql.NullTime
+  PageContentBase
+  CreatedAt sql.NullTime
+  UpdatedAt sql.NullTime
 }
 
 type PageContentUpdate struct {
- PageContentBase
- UpdatedAt sql.NullTime
- DeletedAt time.Time
+  PageContentBase
+  UpdatedAt sql.NullTime
+  DeletedAt time.Time
 }
 ```
 
@@ -89,3 +89,41 @@ type PageContentUpdate struct {
   - g++/clang でビルドされた C++ アプリを動かす用途
   - SSLも利用可能
   - 主に **動的リンクのC++アプリ** や **一部の機械学習推論バイナリ（ONNX Runtimeなど）** を実行するために使う
+
+## データ構造の分離
+
+データ構造のうち、ドメイン領域のものを domain/model、そうでないものを usecase/entity に分離する構成をとっている。
+この時、本来の意味でドメイン領域を考えるなら以下のようになり、同じ id でも表現したい対象によってドメイン領域になったり、ならなかったりする。こうなると、正直ドメインの原理にはのっとっているもののかなり見づらしく、後に編集するときに基準が読み手にわかりづらくなる。
+
+正直、テーブル定義を分離する必要は薄いかもしれない。
+
+```go
+// 取引ドメインモデル
+type Trade struct {
+  ProductIds   []int64    // 取引と商品の関係はドメイン（商売）上の概念
+  Amount       float64
+}
+
+// 取引DBモデル
+type TradeModel struct {
+  Trade
+  ID        int64         // 技術的な主キー、ドメイン（商売）上は不要
+  CreatedAt time.Time     // 取引発生時刻参照はドメイン（商売）上不要
+  UpdatedAt time.Time     // 取引更新時刻参照はドメイン（商売）上不要
+  DeletedAt sql.NullTime  // 技術的な論理削除など
+}
+
+// 商品ドメインモデル
+type Product struct {
+  Name        string
+  Price       float64
+}
+
+// 商品DBモデル
+type ProductModel struct {
+  Product
+  ID        int64         // 技術的な主キー、ドメイン（商売）上は不要
+  CreatedAt time.Time     // Trade とは異なり、商品登録時刻参照はドメイン（商売）上不要
+  UpdatedAt time.Time     // Trade とは異なり、商品更新時刻参照はドメイン（商売）上不要
+  DeletedAt sql.NullTime  // 技術的な論理削除など
+}
