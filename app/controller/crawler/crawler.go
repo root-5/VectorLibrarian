@@ -108,7 +108,7 @@ func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, m
 			"\n\n## page itemization\n\n" + itemization
 
 		// 箇条書きをテキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
-		vector, err := nlp.ConvertToVector(targetText, false)
+		convertResult, err := nlp.ConvertToVector(markdown, false)
 		if err != nil {
 			log.Error(err)
 			return

@@ -32,15 +32,7 @@ nlp サーバーにテキストを送信してベクトルに変換する関数
   - isQuery)	クエリかどうかの真偽値（True なら「query: 」、False なら「passage: 」のプレフィックスが文頭に付与される）
   - return)		最大トークン長、オーバーラップトークン長、モデル名、モデル特有のベクトル長、チャンクの配列、ベクトルの2次元配列、エラー
 */
-func ConvertToVector(text string, isQuery bool) (
-	maxTokenLength int,
-	overlapTokenLength int,
-	modelName string,
-	modelVectorLength int,
-	chunks []string,
-	vectors [][]float32,
-	err error,
-) {
+func ConvertToVector(text string, isQuery bool) (resp ConvertResponse, err error) {
 	// リクエストボディを作成
 	requestBody := ConvertRequest{
 		Text:    text,
@@ -50,24 +42,22 @@ func ConvertToVector(text string, isQuery bool) (
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		log.Error(err)
-		return 0, 0, "", 0, nil, nil, err
+		return ConvertResponse{}, err
 	}
 
 	// POSTリクエストを送信
-	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":"+os.Getenv("NLP_PORT")+"/convert", "application/json", bytes.NewBuffer(jsonData))
+	httpResp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":"+os.Getenv("NLP_PORT")+"/convert", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Error(err)
-		return 0, 0, "", 0, nil, nil, err
+		return ConvertResponse{}, err
 	}
-	defer resp.Body.Close()
+	defer httpResp.Body.Close()
 
 	// 構造体に直接デコード
-	var result ConvertResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(httpResp.Body).Decode(&resp); err != nil {
 		log.Error(err)
-		return 0, 0, "", 0, nil, nil, err
+		return ConvertResponse{}, err
 	}
 
-	return result.MaxTokenLength, result.OverlapTokenLength, result.ModelName,
-		result.ModelVectorLength, result.Chunks, result.Vectors, nil
+	return resp, nil
 }
