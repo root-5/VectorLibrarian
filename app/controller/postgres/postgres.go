@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"app/controller/log"
-	"app/domain/model"
+	"app/usecase/entity"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -42,12 +42,49 @@ DB の初期化をする関数
 */
 func InitTable() (err error) {
 	_, err = db.NewCreateTable().
-		Model((*model.Page)(nil)).
+		Model((*entity.DBDomain)(nil)).
 		IfNotExists().
 		Exec(context.Background())
 	if err != nil {
 		log.Error(err)
 		return
 	}
+
+	_, err = db.NewCreateTable().
+		Model((*entity.DBPage)(nil)).
+		IfNotExists().
+		Exec(context.Background())
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	_, err = db.NewCreateTable().
+		Model((*entity.DBChunk)(nil)).
+		IfNotExists().
+		Exec(context.Background())
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	_, err = db.NewCreateTable().
+		Model((*entity.DBVector)(nil)).
+		IfNotExists().
+		Exec(context.Background())
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	_, err = db.NewCreateTable().
+		Model((*entity.DBNlpConfig)(nil)).
+		IfNotExists().
+		Exec(context.Background())
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
 	return nil
 }
