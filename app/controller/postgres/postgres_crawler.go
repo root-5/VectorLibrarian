@@ -4,9 +4,31 @@ package postgres
 import (
 	"app/controller/log"
 	"app/domain/model"
+
+	"app/usecase/entity"
 	"context"
 	"unicode/utf8"
 )
+
+/*
+ドメイン情報を取得する関数
+  - return) domains	ドメイン情報のスライス
+  - return) err		エラー
+*/
+func GetDomains() (domains []entity.DBDomain, err error) {
+	var dbDomains []entity.DBDomain
+
+	// ドメイン情報を取得
+	err = db.NewSelect().
+		Model(&dbDomains).
+		Scan(context.Background())
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return dbDomains, nil
+}
 
 /*
 同一のハッシュ値を持つページが存在するか確認する関数
@@ -16,7 +38,7 @@ import (
 */
 func CheckHashExists(hash string) (exists bool, err error) {
 	// ハッシュ値を持つページが存在するか確認
-	page := &model.Page{Hash: hash}
+	page := &entity.DBPage{PageInfo: model.PageInfo{Hash: hash}}
 	exists, err = db.NewSelect().
 		Model(page).
 		Where("hash = ?", hash).
