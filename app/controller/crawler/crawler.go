@@ -13,7 +13,7 @@ import (
 // スケジューラーから呼び出すための関数、一旦定数などもここで設定
 func Start() (err error) {
 	// 初期設定・定数
-	targetDomain := "www.city.hamura.tokyo.jp"
+	// targetDomain := "www.city.hamura.tokyo.jp"
 	startPath := "/"
 	allowedPaths := []string{
 		"/",
@@ -21,8 +21,25 @@ func Start() (err error) {
 	maxScrapeDepth := 7
 	isTest := false
 
+	// ドメイン情報を取得
+	domains, err := postgres.GetDomains()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	if len(domains) == 0 {
+		log.Info("クロール対象のドメインが存在しません。")
+		return nil
+	}
+
+	// とりあえず最初のドメインだけクロール
+	targetDomainId := domains[0].Id
+	targetDomain := domains[0].Domain
+
+	log.Info("クロール対象ドメイン: " + targetDomain)
+
 	// クロールを開始
-	err = CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth, isTest)
+	err = CrawlDomain(targetDomainId, targetDomain, startPath, allowedPaths, maxScrapeDepth, isTest)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -33,6 +50,7 @@ func Start() (err error) {
 
 /*
 対象ドメインをクロールする関数
+  - targetDomainId	クロール対象のドメインのID
   - targetDomain	クロール対象のドメイン
   - startPath		クロールを開始するパス
   - allowedPaths	パスに必ず含まれなければならない文字列のリスト
@@ -44,7 +62,7 @@ func Start() (err error) {
 ["/docs/", "/articles/"] なら "~/docs/abc", "~/articles/xyz" は許可されるが "~/blog/123" は許可されない
 ["/"] 指定であれば全て許可される
 */
-func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int, isTest bool) (err error) {
+func CrawlDomain(targetDomainId int64, targetDomain string, startPath string, allowedPaths []string, maxScrapeDepth int, isTest bool) (err error) {
 
 	// デフォルトのコレクターを作成
 	c := colly.NewCollector(
@@ -73,24 +91,27 @@ func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, m
 	// html タグを見つけたときの処理
 	c.OnHTML("html", func(e *colly.HTMLElement) {
 		// ページデータを抽出
-		domain, path, pageTitle, description, keywords, markdown, hash, err := htmlToPageData(e)
+		pageInfo, err := htmlToPageData(e)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
+		// ドメインIDを設定
+		pageInfo.DomainId = targetDomainId
+
 		if isTest {
-			log.Info(">> path:" + path)
-			log.Info(">> pageTitle:" + pageTitle)
-			log.Info(">> description:" + description)
-			log.Info(">> keywords:" + keywords)
-			// log.Info(">> markdown:" + markdown)
-			log.Info(">> hash:" + hash)
+			log.Info(">> path:" + pageInfo.Path)
+			log.Info(">> pageTitle:" + pageInfo.Title)
+			log.Info(">> description:" + pageInfo.Description)
+			log.Info(">> keywords:" + pageInfo.Keywords)
+			// log.Info(">> markdown:" + pageInfo.Markdown)
+			log.Info(">> hash:" + pageInfo.Hash)
 			log.Info("\n")
 		}
 
 		// ハッシュ値を照合
-		isHashExists, err := postgres.CheckHashExists(hash)
+		isHashExists, err := postgres.CheckHashExists(pageInfo.Hash)
 		if err != nil {
 			log.Error(err)
 			return
@@ -100,22 +121,15 @@ func CrawlDomain(targetDomain string, startPath string, allowedPaths []string, m
 			return // 既に保存されているハッシュがあればスキップ（テストモード時はスキップしない）
 		}
 
-		// model に記載した通り、見出しをマークダウンから抽出して箇条書きに変換
-		itemization := extractHeadings(markdown)
-		targetText := "## page title\n\n" + pageTitle +
-			// "\n\n## page description\n\n" + description +
-			// "\n\n## page keywords\n\n" + keywords +
-			"\n\n## page itemization\n\n" + itemization
-
 		// 箇条書きをテキスト正規化、ベクトル化のリクエストを NLP サーバーに送信
-		convertResult, err := nlp.ConvertToVector(markdown, false)
+		convertResult, err := nlp.ConvertToVector(pageInfo.Markdown, false)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
 		// ページデータをデータベースに保存
-		err = postgres.SaveCrawledData(domain, path, pageTitle, description, keywords, markdown, hash, vector)
+		err = postgres.SaveCrawledData(pageInfo, convertResult)
 		if err != nil {
 			log.Error(err)
 			return
