@@ -2,18 +2,25 @@
 package model
 
 /*
+## ドメイン分離の考え方
+データ構造のうち、ドメイン領域のものを domain/model、そうでないものを usecase/entity に分離する構成をとっている。
+
+## Page に DomainId を持たせることについて
+ID という存在そのものはドメイン領域ではないが、Page と Domain の関係性はドメイン領域であり、ドメイン領域でも関係性を明示できるためしている。
+ドメイン層には本来タグが無いべきだが、そうすると重複した記述が entity 側に生じ、ドメインを分離した意味が薄れるため妥協している。
+
+
 bun: は ORM が利用するタグ
 json: は API のレスポンスを生成時に使用されるタグ
-ドメイン層にはタグが無いべきだが、そうすると重複した記述が entity 側に生じ、ドメインを分離した意味が薄れるため妥協している
 */
 
 // URLドメイン情報
-type Domain struct {
+type DomainInfo struct {
 	Domain string `bun:"domain,notnull,unique:url,type:varchar(100)" json:"domain"` // ドメイン
 }
 
 // ページコンテンツ情報
-type Page struct {
+type PageInfo struct {
 	DomainId    int64  `bun:"domain_id,notnull,type:int"`                               // ドメインID
 	Path        string `bun:"path,notnull,unique:url,type:varchar(255)" json:"path"`    // パス
 	Title       string `bun:"title,notnull,type:varchar(100)" json:"title"`             // ページタイトル
@@ -24,21 +31,21 @@ type Page struct {
 }
 
 // チャンク情報
-type Chunk struct {
+type ChunkInfo struct {
 	Chunk       string `bun:"chunk,notnull,type:text"`        // チャンク
 	PageId      int64  `bun:"page_id,notnull,type:int"`       // ページID
 	NlpConfigId int64  `bun:"nlp_config_id,notnull,type:int"` // NLP設定ID
 }
 
 // ベクトル情報
-type Vector struct {
+type VectorInfo struct {
 	Vector      []float32 `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
 	ChunkId     int64     `bun:"chunk_id,notnull,type:int"`       // チャンクID
 	NlpConfigId int64     `bun:"nlp_config_id,notnull,type:int"`  // NLP設定ID
 }
 
 // NLP設定情報
-type NlpConfig struct {
+type NlpConfigInfo struct {
 	MaxTokenLength     int64  `bun:"max_token_length,notnull,type:int"`     // 最大トークン長
 	OverlapTokenLength int64  `bun:"overlap_token_length,notnull,type:int"` // オーバーラップトークン長
 	ModelName          string `bun:"model_name,notnull,type:varchar(100)"`  // モデル名

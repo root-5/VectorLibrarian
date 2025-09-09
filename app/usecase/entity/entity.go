@@ -16,7 +16,7 @@ json: は API のレスポンスを生成時に使用されるタグ
 type DBDomain struct {
 	bun.BaseModel `bun:"table:domains"`
 
-	model.Domain
+	model.DomainInfo
 	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
@@ -27,7 +27,7 @@ type DBDomain struct {
 type DBPage struct {
 	bun.BaseModel `bun:"table:pages"`
 
-	model.Page
+	model.PageInfo
 	Id        int64     `bun:"id,pk,autoincrement" json:"-"`                                          // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"-"`          // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"updated_at"` // 更新日時
@@ -38,7 +38,7 @@ type DBPage struct {
 type DBChunk struct {
 	bun.BaseModel `bun:"table:chunks"`
 
-	model.Chunk
+	model.ChunkInfo
 	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
@@ -50,7 +50,7 @@ type DBChunk struct {
 type DBVector struct {
 	bun.BaseModel `bun:"table:vectors"`
 
-	model.Vector
+	model.VectorInfo
 	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
@@ -61,7 +61,7 @@ type DBVector struct {
 type DBNlpConfig struct {
 	bun.BaseModel `bun:"table:nlp_configs"`
 
-	model.NlpConfig
+	model.NlpConfigInfo
 	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
