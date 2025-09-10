@@ -58,16 +58,13 @@ func CheckHashExists(hash string) (exists bool, err error) {
   - convertResult	nlp サーバーからの変換結果
   - return) err	エラー
 */
-func SaveCrawledData(pageInfo model.PageInfo, convertResult nlp.ConvertResponse) (err error) {
+func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (err error) {
 	// ページ情報
 	// 文字列の長さが制限を超えている場合は UTF-8 安全に切り詰める
-	domainId := pageInfo.DomainID
-	path := truncateRunes(pageInfo.Path, 255)
-	title := truncateRunes(pageInfo.Title, 100)
-	description := truncateRunes(pageInfo.Description, 255)
-	keywords := truncateRunes(pageInfo.Keywords, 255)
-	markdown := pageInfo.Markdown
-	hash := pageInfo.Hash
+	page.Path = truncateRunes(page.Path, 255)
+	page.Title = truncateRunes(page.Title, 100)
+	page.Description = truncateRunes(page.Description, 255)
+	page.Keywords = truncateRunes(page.Keywords, 255)
 
 	// チャンク情報、ベクトル情報、NLP設定情報
 	chunks := convertResult.Chunks
@@ -95,26 +92,17 @@ func SaveCrawledData(pageInfo model.PageInfo, convertResult nlp.ConvertResponse)
 	}
 
 	// ページを保存（存在しない場合は挿入、存在する場合は更新）
-	page := model.PageInfo{
-		DomainID:    domainId,
-		Path:        path,
-		Title:       title,
-		Description: description,
-		Keywords:    keywords,
-		Markdown:    markdown,
-		Hash:        hash,
-	}
 	dbPage := &entity.DBPage{
 		PageInfo: page,
 	}
 	_, err = db.NewInsert().
 		Model(dbPage).
 		On("CONFLICT (domain_id, path) DO UPDATE").
-		Set("title = ?", title).
-		Set("description = ?", description).
-		Set("keywords = ?", keywords).
-		Set("markdown = ?", markdown).
-		Set("hash = ?", hash).
+		Set("title = ?", page.Title).
+		Set("description = ?", page.Description).
+		Set("keywords = ?", page.Keywords).
+		Set("markdown = ?", page.Markdown).
+		Set("hash = ?", page.Hash).
 		Set("vector = ?", vectors).
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(context.Background())
