@@ -29,6 +29,7 @@ type DBPage struct {
 
 	model.PageInfo
 	ID        int64     `bun:"id,pk,autoincrement" json:"-"`                                          // ID
+	Domain    *DBDomain `bun:"rel:belongs-to,join:domain_id=id" json:"domain_info"`                   // ドメイン情報
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"-"`          // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"updated_at"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz" json:"-"`                                // 削除日時
@@ -40,6 +41,7 @@ type DBChunk struct {
 
 	model.ChunkInfo
 	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	Page      *DBPage   `bun:"rel:belongs-to,join:page_id=id"`                      // ページ情報
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
@@ -52,6 +54,7 @@ type DBVector struct {
 
 	model.VectorInfo
 	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	Chunk     *DBChunk  `bun:"rel:belongs-to,join:chunk_id=id"`                     // チャンク情報
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
