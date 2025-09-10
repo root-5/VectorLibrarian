@@ -175,9 +175,9 @@ func TestHtmlToPageData(t *testing.T) {
 		t.Fatalf("予期しないエラー: %v", err)
 	}
 
-	expectedDomainId := 0
-	if pageInfo.DomainId != int64(expectedDomainId) {
-		t.Errorf("期待されるドメイン '%d' ですが、実際は '%d' でした", expectedDomainId, pageInfo.DomainId)
+	expectedDomainID := 0
+	if pageInfo.DomainID != int64(expectedDomainID) {
+		t.Errorf("期待されるドメイン '%d' ですが、実際は '%d' でした", expectedDomainID, pageInfo.DomainID)
 	}
 
 	expectedPath := "/test-path"

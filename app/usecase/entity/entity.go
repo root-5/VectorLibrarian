@@ -17,7 +17,7 @@ type DBDomain struct {
 	bun.BaseModel `bun:"table:domains"`
 
 	model.DomainInfo
-	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
@@ -28,7 +28,7 @@ type DBPage struct {
 	bun.BaseModel `bun:"table:pages"`
 
 	model.PageInfo
-	Id        int64     `bun:"id,pk,autoincrement" json:"-"`                                          // ID
+	ID        int64     `bun:"id,pk,autoincrement" json:"-"`                                          // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"-"`          // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"updated_at"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz" json:"-"`                                // 削除日時
@@ -39,7 +39,7 @@ type DBChunk struct {
 	bun.BaseModel `bun:"table:chunks"`
 
 	model.ChunkInfo
-	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
@@ -51,7 +51,7 @@ type DBVector struct {
 	bun.BaseModel `bun:"table:vectors"`
 
 	model.VectorInfo
-	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
@@ -62,7 +62,7 @@ type DBNlpConfig struct {
 	bun.BaseModel `bun:"table:nlp_configs"`
 
 	model.NlpConfigInfo
-	Id        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時

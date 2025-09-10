@@ -33,7 +33,7 @@ func Start() (err error) {
 	}
 
 	// とりあえず最初のドメインだけクロール
-	targetDomainId := domains[0].Id
+	targetDomainId := domains[0].ID
 	targetDomain := domains[0].Domain
 
 	log.Info("クロール対象ドメイン: " + targetDomain)
@@ -98,7 +98,7 @@ func CrawlDomain(targetDomainId int64, targetDomain string, startPath string, al
 		}
 
 		// ドメインIDを設定
-		pageInfo.DomainId = targetDomainId
+		pageInfo.DomainID = targetDomainId
 
 		if isTest {
 			log.Info(">> path:" + pageInfo.Path)

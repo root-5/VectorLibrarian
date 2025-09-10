@@ -21,27 +21,30 @@ type DomainInfo struct {
 
 // ページコンテンツ情報
 type PageInfo struct {
-	DomainId    int64  `bun:"domain_id,notnull,type:int"`                               // ドメインID
-	Path        string `bun:"path,notnull,unique:url,type:varchar(255)" json:"path"`    // パス
-	Title       string `bun:"title,notnull,type:varchar(100)" json:"title"`             // ページタイトル
-	Description string `bun:"description,notnull,type:varchar(255)" json:"description"` // ディスクリプション
-	Keywords    string `bun:"keywords,notnull,type:varchar(255)" json:"keywords"`       // キーワード
-	Markdown    string `bun:"markdown,notnull,type:text" json:"markdown"`               // Markdown コンテンツ
-	Hash        string `bun:"hash,notnull,type:char(64)" json:"-"`                      // コンテンツのハッシュ値
+	DomainID    int64       `bun:"domain_id,notnull,type:int"`                               // ドメインID
+	Domain      *DomainInfo `bun:"rel:belongs-to,join:domain_id=id" json:"domain_info"`      // ドメイン情報
+	Path        string      `bun:"path,notnull,unique:url,type:varchar(255)" json:"path"`    // パス
+	Title       string      `bun:"title,notnull,type:varchar(100)" json:"title"`             // ページタイトル
+	Description string      `bun:"description,notnull,type:varchar(255)" json:"description"` // ディスクリプション
+	Keywords    string      `bun:"keywords,notnull,type:varchar(255)" json:"keywords"`       // キーワード
+	Markdown    string      `bun:"markdown,notnull,type:text" json:"markdown"`               // Markdown コンテンツ
+	Hash        string      `bun:"hash,notnull,type:char(64)" json:"-"`                      // コンテンツのハッシュ値
 }
 
 // チャンク情報
 type ChunkInfo struct {
-	Chunk       string `bun:"chunk,notnull,type:text"`        // チャンク
-	PageId      int64  `bun:"page_id,notnull,type:int"`       // ページID
-	NlpConfigId int64  `bun:"nlp_config_id,notnull,type:int"` // NLP設定ID
+	Chunk       string    `bun:"chunk,notnull,type:text"`        // チャンク
+	PageID      int64     `bun:"page_id,notnull,type:int"`       // ページID
+	Page        *PageInfo `bun:"rel:belongs-to,join:page_id=id"` // ページ情報
+	NlpConfigID int64     `bun:"nlp_config_id,notnull,type:int"` // NLP設定ID
 }
 
 // ベクトル情報
 type VectorInfo struct {
-	Vector      []float32 `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
-	ChunkId     int64     `bun:"chunk_id,notnull,type:int"`       // チャンクID
-	NlpConfigId int64     `bun:"nlp_config_id,notnull,type:int"`  // NLP設定ID
+	Vector      []float32  `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
+	ChunkID     int64      `bun:"chunk_id,notnull,type:int"`       // チャンクID
+	Chunk       *ChunkInfo `bun:"rel:belongs-to,join:chunk_id=id"` // チャンク情報
+	NlpConfigID int64      `bun:"nlp_config_id,notnull,type:int"`  // NLP設定ID
 }
 
 // NLP設定情報

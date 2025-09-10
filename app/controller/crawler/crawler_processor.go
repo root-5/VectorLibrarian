@@ -35,7 +35,7 @@ func htmlToPageData(e *colly.HTMLElement) (pageInfo model.PageInfo, err error) {
 	)
 
 	// URL からドメインとパスを取得
-	pageInfo.DomainId = 0 // 仮の値、後で設定する
+	pageInfo.DomainID = 0 // 仮の値、後で設定する
 	pageInfo.Path = e.Request.URL.Path
 
 	// ページタイトル、ディスクリプション、キーワードを取得（それぞれ存在しない場合は "--" を設定）
