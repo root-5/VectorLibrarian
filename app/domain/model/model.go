@@ -49,10 +49,10 @@ type VectorInfo struct {
 
 // NLP設定情報
 type NlpConfigInfo struct {
-	MaxTokenLength     int64  `bun:"max_token_length,notnull,type:int"`     // 最大トークン長
-	OverlapTokenLength int64  `bun:"overlap_token_length,notnull,type:int"` // オーバーラップトークン長
-	ModelName          string `bun:"model_name,notnull,type:varchar(100)"`  // モデル名
-	ModelVectorLength  int64  `bun:"model_vector_length,notnull,type:int"`  // モデルのベクトル長
+	MaxTokenLength     int64  `bun:"max_token_length,notnull,type:int" json:"max_token_length"`         // 最大トークン長
+	OverlapTokenLength int64  `bun:"overlap_token_length,notnull,type:int" json:"overlap_token_length"` // オーバーラップトークン長
+	ModelName          string `bun:"model_name,notnull,type:varchar(100)" json:"model_name"`            // モデル名
+	ModelVectorLength  int64  `bun:"model_vector_length,notnull,type:int" json:"model_vector_length"`   // モデルのベクトル長
 }
 
 // 検索履歴情報

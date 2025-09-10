@@ -2,6 +2,7 @@ package nlp
 
 import (
 	"app/controller/log"
+	"app/domain/model"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -17,12 +18,9 @@ type ConvertRequest struct {
 // NLPサーバーからのレスポンス用の構造体
 // nlp/api/api.go と同じ構造体
 type ConvertResponse struct {
-	MaxTokenLength     int         `json:"max_token_length"`
-	OverlapTokenLength int         `json:"overlap_token_length"`
-	ModelName          string      `json:"model_name"`
-	ModelVectorLength  int         `json:"model_vector_length"`
-	Chunks             []string    `json:"chunks"`
-	Vectors            [][]float32 `json:"vectors"`
+	model.NlpConfigInfo
+	Chunks  []string    `json:"chunks"`
+	Vectors [][]float32 `json:"vectors"`
 }
 
 /*

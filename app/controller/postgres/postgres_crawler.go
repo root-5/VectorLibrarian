@@ -3,6 +3,7 @@ package postgres
 
 import (
 	"app/controller/log"
+	"app/controller/nlp"
 	"app/domain/model"
 
 	"app/usecase/entity"
@@ -53,49 +54,123 @@ func CheckHashExists(hash string) (exists bool, err error) {
 
 /*
 クロールしたページデータを保存する関数
-  - url			クロールしたページの URL
-  - title			ページのタイトル
-  - description	ページの説明
-  - keywords		ページのキーワード
-  - markdown		ページのマークダウンコンテンツ
+  - pageInfo		保存するページ情報
+  - convertResult	nlp サーバーからの変換結果
   - return) err	エラー
 */
-func SaveCrawledData(domain, path, title, description, keywords, markdown, hash string, vector []float32) (err error) {
+func SaveCrawledData(pageInfo model.PageInfo, convertResult nlp.ConvertResponse) (err error) {
+	// ページ情報
 	// 文字列の長さが制限を超えている場合は UTF-8 安全に切り詰める
-	domain = truncateRunes(domain, 100)
-	path = truncateRunes(path, 255)
-	title = truncateRunes(title, 100)
-	description = truncateRunes(description, 255)
-	keywords = truncateRunes(keywords, 255)
+	domainId := pageInfo.DomainID
+	path := truncateRunes(pageInfo.Path, 255)
+	title := truncateRunes(pageInfo.Title, 100)
+	description := truncateRunes(pageInfo.Description, 255)
+	keywords := truncateRunes(pageInfo.Keywords, 255)
+	markdown := pageInfo.Markdown
+	hash := pageInfo.Hash
 
-	// pages テーブルのモデルを作成
-	page := &model.Page{
-		Domain:      domain,
+	// チャンク情報、ベクトル情報、NLP設定情報
+	chunks := convertResult.Chunks
+	vectors := convertResult.Vectors
+	NlpConfigInfo := convertResult.NlpConfigInfo
+
+	// トランザクション開始
+	tx, err := db.BeginTx(context.Background(), nil)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	// NLP設定を保存（存在しない場合のみ挿入）
+	nlpConfig := &entity.DBNlpConfig{
+		NlpConfigInfo: NlpConfigInfo,
+	}
+	_, err = db.NewInsert().
+		Model(nlpConfig).
+		On("CONFLICT (model_name) DO NOTHING").
+		Exec(context.Background())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	// ページを保存（存在しない場合は挿入、存在する場合は更新）
+	page := model.PageInfo{
+		DomainID:    domainId,
 		Path:        path,
 		Title:       title,
 		Description: description,
 		Keywords:    keywords,
 		Markdown:    markdown,
 		Hash:        hash,
-		Vector:      vector,
 	}
-
-	// すでに存在する場合は更新、存在しない場合は新規挿入
+	dbPage := &entity.DBPage{
+		PageInfo: page,
+	}
 	_, err = db.NewInsert().
-		Model(page).
-		On("CONFLICT (domain, path) DO UPDATE").
+		Model(dbPage).
+		On("CONFLICT (domain_id, path) DO UPDATE").
 		Set("title = ?", title).
 		Set("description = ?", description).
 		Set("keywords = ?", keywords).
 		Set("markdown = ?", markdown).
 		Set("hash = ?", hash).
-		Set("vector = ?", vector).
+		Set("vector = ?", vectors).
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(context.Background())
 	if err != nil {
 		log.Error(err)
 		return err
 	}
+
+	for i, chunk := range chunks {
+		// チャンク情報を保存
+		chunkData := model.ChunkInfo{
+			Chunk:       chunk,
+			PageID:      dbPage.ID,
+			NlpConfigID: nlpConfig.ID,
+		}
+		chunkInfo := &entity.DBChunk{
+			ChunkInfo: chunkData,
+		}
+		_, err = db.NewInsert().
+			Model(chunkInfo).
+			On("CONFLICT (page_id, chunk) DO NOTHING").
+			Exec(context.Background())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+
+		// ベクトル情報を保存
+		vectorData := model.VectorInfo{
+			Vector:      vectors[i],
+			ChunkID:     chunkInfo.ID,
+			NlpConfigID: nlpConfig.ID,
+		}
+		vectorInfo := &entity.DBVector{
+			VectorInfo: vectorData,
+		}
+		_, err = db.NewInsert().
+			Model(vectorInfo).
+			On("CONFLICT (chunk_id) DO UPDATE").
+			Set("vector = ?", vectors[i]).
+			Set("nlp_config_id = ?", nlpConfig.ID).
+			Exec(context.Background())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+	}
+
+	// トランザクションコミット
+	if err := tx.Commit(); err != nil {
+		log.Error(err)
+		return err
+	}
+
+	// 正常終了
+	log.Info("大成功！！！！！！！")
 
 	return nil
 }
