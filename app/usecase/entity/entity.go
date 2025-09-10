@@ -16,8 +16,8 @@ json: は API のレスポンスを生成時に使用されるタグ
 type DBDomain struct {
 	bun.BaseModel `bun:"table:domains"`
 
-	model.DomainInfo
 	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	model.DomainInfo
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
@@ -27,8 +27,8 @@ type DBDomain struct {
 type DBPage struct {
 	bun.BaseModel `bun:"table:pages"`
 
-	model.PageInfo
 	ID        int64     `bun:"id,pk,autoincrement" json:"-"`                                          // ID
+	model.PageInfo
 	Domain    *DBDomain `bun:"rel:belongs-to,join:domain_id=id" json:"domain_info"`                   // ドメイン情報
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"-"`          // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz" json:"updated_at"` // 更新日時
@@ -39,8 +39,8 @@ type DBPage struct {
 type DBChunk struct {
 	bun.BaseModel `bun:"table:chunks"`
 
-	model.ChunkInfo
 	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	model.ChunkInfo
 	Page      *DBPage   `bun:"rel:belongs-to,join:page_id=id"`                      // ページ情報
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
@@ -52,8 +52,8 @@ type DBChunk struct {
 type DBVector struct {
 	bun.BaseModel `bun:"table:vectors"`
 
-	model.VectorInfo
 	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	model.VectorInfo
 	Chunk     *DBChunk  `bun:"rel:belongs-to,join:chunk_id=id"`                     // チャンク情報
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
