@@ -15,21 +15,21 @@ import (
   - return)	similarPages	コサイン類似度が上位のページデータ
   - return) err		エラー
 */
-func VectorSearch(query string, limit int) (similarPages []model.Page, err error) {
-	_, _, _, _, _, vectors, _ := nlp.ConvertToVector(query, false)
+func VectorSearch(query string, limit int) (similarPages []model.VectorInfo, err error) {
+	resp, _ := nlp.ConvertToVector(query, false)
 
 	// 検索用にベクトルを一つにまとめる（平均を取る）
-	vector := vectors[0]
-	for i := 1; i < len(vectors); i++ {
-		for j := 0; j < len(vectors[i]); j++ {
-			vector[j] += vectors[i][j]
+	vector := resp.Vectors[0]
+	for i := 1; i < len(resp.Vectors); i++ {
+		for j := 0; j < len(resp.Vectors[i]); j++ {
+			vector[j] += resp.Vectors[i][j]
 		}
 	}
 	for i := 0; i < len(vector); i++ {
-		vector[i] /= float32(len(vectors))
+		vector[i] /= float32(len(resp.Vectors))
 	}
 
-	similarPages, err = postgres.GetSimilarPages(vector, limit)
+	similarPages, err = postgres.GetSimilarVectors(vector, limit)
 	if err != nil {
 		log.Error(err)
 		return nil, err

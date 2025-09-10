@@ -16,11 +16,12 @@ import (
   - return)		コサイン類似度が上位のページデータ
   - return) err	エラー
 */
-func GetSimilarPages(vector []float32, limit int) (pages []model.Page, err error) {
+func GetSimilarVectors(vector []float32, limit int) (similarVectors []model.VectorInfo, err error) {
 	vectorStr := vectorToString(vector)
 
 	err = db.NewSelect().
-		Model(&pages).
+		Model(&similarVectors).
+		Relation("Chunk.Page").
 		OrderExpr("vector <=> ?", vectorStr).
 		Limit(limit).
 		Scan(context.Background())
@@ -29,7 +30,7 @@ func GetSimilarPages(vector []float32, limit int) (pages []model.Page, err error
 		return nil, err
 	}
 
-	return pages, nil
+	return similarVectors, nil
 }
 
 // float32スライスをPostgreSQLのベクトル形式の文字列に変換
