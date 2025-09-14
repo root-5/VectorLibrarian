@@ -16,9 +16,7 @@ import (
   - return) domains	ドメイン情報のスライス
   - return) err		エラー
 */
-func GetDomains() (domains []entity.DBDomain, err error) {
-	var dbDomains []entity.DBDomain
-
+func GetDomains() (dbDomains []entity.DBDomain, err error) {
 	// ドメイン情報を取得
 	err = db.NewSelect().
 		Model(&dbDomains).
