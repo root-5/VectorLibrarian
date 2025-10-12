@@ -21,35 +21,35 @@ type DomainInfo struct {
 
 // ページコンテンツ情報
 type PageInfo struct {
-	DomainID    int64  `bun:"domain_id,notnull,unique"`                                 // ドメインID
-	Path        string `bun:"path,notnull,unique,type:varchar(255)" json:"path"`        // パス
-	Title       string `bun:"title,notnull,type:varchar(100)" json:"title"`             // ページタイトル
-	Description string `bun:"description,notnull,type:varchar(255)" json:"description"` // ディスクリプション
-	Keywords    string `bun:"keywords,notnull,type:varchar(255)" json:"keywords"`       // キーワード
-	Markdown    string `bun:"markdown,notnull,type:text" json:"markdown"`               // Markdown コンテンツ
-	Hash        string `bun:"hash,notnull,type:char(64)" json:"-"`                      // コンテンツのハッシュ値
+	DomainID    int64  `bun:"domain_id,notnull,unique:page_unique"`                          // ドメインID
+	Path        string `bun:"path,notnull,unique:page_unique,type:varchar(255)" json:"path"` // パス
+	Title       string `bun:"title,notnull,type:varchar(100)" json:"title"`                  // ページタイトル
+	Description string `bun:"description,notnull,type:varchar(255)" json:"description"`      // ディスクリプション
+	Keywords    string `bun:"keywords,notnull,type:varchar(255)" json:"keywords"`            // キーワード
+	Markdown    string `bun:"markdown,notnull,type:text" json:"markdown"`                    // Markdown コンテンツ
+	Hash        string `bun:"hash,notnull,type:char(64)" json:"-"`                           // コンテンツのハッシュ値
 }
 
 // チャンク情報
 type ChunkInfo struct {
 	Chunk       string `bun:"chunk,notnull,type:text"` // チャンク
-	PageID      int64  `bun:"page_id,notnull"`         // ページID
+	PageID      int64  `bun:"page_id,notnull,unique"`  // ページID
 	NlpConfigID int64  `bun:"nlp_config_id,notnull"`   // NLP設定ID
 }
 
 // ベクトル情報
 type VectorInfo struct {
 	Vector      []float32 `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
-	ChunkID     int64     `bun:"chunk_id,notnull"`                // チャンクID
+	ChunkID     int64     `bun:"chunk_id,notnull,unique"`         // チャンクID
 	NlpConfigID int64     `bun:"nlp_config_id,notnull"`           // NLP設定ID
 }
 
 // NLP設定情報
 type NlpConfigInfo struct {
-	MaxTokenLength     int64  `bun:"max_token_length,unique:configname,notnull" json:"max_token_length"`
-	OverlapTokenLength int64  `bun:"overlap_token_length,unique:configname,notnull" json:"overlap_token_length"`
-	ModelName          string `bun:"model_name,unique:configname,notnull,type:varchar(100)" json:"model_name"`
-	ModelVectorLength  int64  `bun:"model_vector_length,unique:configname,notnull" json:"model_vector_length"`
+	MaxTokenLength     int64  `bun:"max_token_length,unique:config_unique,notnull" json:"max_token_length"`
+	OverlapTokenLength int64  `bun:"overlap_token_length,unique:config_unique,notnull" json:"overlap_token_length"`
+	ModelName          string `bun:"model_name,unique:config_unique,notnull,type:varchar(100)" json:"model_name"`
+	ModelVectorLength  int64  `bun:"model_vector_length,unique:config_unique,notnull" json:"model_vector_length"`
 }
 
 // 検索履歴情報

@@ -64,8 +64,8 @@ type DBVector struct {
 type DBNlpConfig struct {
 	bun.BaseModel `bun:"table:nlp_configs"`
 
-	model.NlpConfigInfo
 	ID        int64     `bun:"id,pk,autoincrement"`                                 // ID
+	model.NlpConfigInfo
 	CreatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 作成日時
 	UpdatedAt time.Time `bun:",notnull,default:current_timestamp,type:timestamptz"` // 更新日時
 	DeletedAt time.Time `bun:",soft_delete,type:timestamptz"`                       // 削除日時
