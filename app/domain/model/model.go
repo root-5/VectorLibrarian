@@ -21,7 +21,7 @@ type DomainInfo struct {
 
 // ページコンテンツ情報
 type PageInfo struct {
-	DomainID    int64  `bun:"domain_id,notnull,unique,type:int"`                        // ドメインID
+	DomainID    int64  `bun:"domain_id,notnull,unique"`                                 // ドメインID
 	Path        string `bun:"path,notnull,unique,type:varchar(255)" json:"path"`        // パス
 	Title       string `bun:"title,notnull,type:varchar(100)" json:"title"`             // ページタイトル
 	Description string `bun:"description,notnull,type:varchar(255)" json:"description"` // ディスクリプション
@@ -32,24 +32,24 @@ type PageInfo struct {
 
 // チャンク情報
 type ChunkInfo struct {
-	Chunk       string `bun:"chunk,notnull,type:text"`        // チャンク
-	PageID      int64  `bun:"page_id,notnull,type:int"`       // ページID
-	NlpConfigID int64  `bun:"nlp_config_id,notnull,type:int"` // NLP設定ID
+	Chunk       string `bun:"chunk,notnull,type:text"` // チャンク
+	PageID      int64  `bun:"page_id,notnull"`         // ページID
+	NlpConfigID int64  `bun:"nlp_config_id,notnull"`   // NLP設定ID
 }
 
 // ベクトル情報
 type VectorInfo struct {
 	Vector      []float32 `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
-	ChunkID     int64     `bun:"chunk_id,notnull,type:int"`       // チャンクID
-	NlpConfigID int64     `bun:"nlp_config_id,notnull,type:int"`  // NLP設定ID
+	ChunkID     int64     `bun:"chunk_id,notnull"`                // チャンクID
+	NlpConfigID int64     `bun:"nlp_config_id,notnull"`           // NLP設定ID
 }
 
 // NLP設定情報
 type NlpConfigInfo struct {
-	MaxTokenLength     int64  `bun:"max_token_length,notnull,type:int" json:"max_token_length"`         // 最大トークン長
-	OverlapTokenLength int64  `bun:"overlap_token_length,notnull,type:int" json:"overlap_token_length"` // オーバーラップトークン長
-	ModelName          string `bun:"model_name,notnull,type:varchar(100)" json:"model_name"`            // モデル名
-	ModelVectorLength  int64  `bun:"model_vector_length,notnull,type:int" json:"model_vector_length"`   // モデルのベクトル長
+	MaxTokenLength     int64  `bun:"max_token_length,unique:configname,notnull" json:"max_token_length"`
+	OverlapTokenLength int64  `bun:"overlap_token_length,unique:configname,notnull" json:"overlap_token_length"`
+	ModelName          string `bun:"model_name,unique:configname,notnull,type:varchar(100)" json:"model_name"`
+	ModelVectorLength  int64  `bun:"model_vector_length,unique:configname,notnull" json:"model_vector_length"`
 }
 
 // 検索履歴情報
