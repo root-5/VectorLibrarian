@@ -93,6 +93,13 @@ sudo cp -rp VectorLibrarian VectorLibrarian.backup.`date "+%Y-%m-%d_%H-%M"`
 - `docker compose exec db sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB > /backup/backup_$(date +%Y-%m-%d_%H-%M).sql'`: データベースのバックアップを取得
 - `docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB < /backup/backup.sql'`: データベースのバックアップを復元
 
+ドメインテーブルの初期設定用ドメイン
+```
+ id |          domain          |          created_at           |          updated_at           |          deleted_at          
+----+--------------------------+-------------------------------+-------------------------------+------------------------------
+  1 | www.city.hamura.tokyo.jp | 2025-10-11 23:14:20.570376+09 | 2025-10-11 23:14:20.570376+09 | 0001-01-01 09:18:59+09:18:59
+```
+
 ### nlp コンテナ用
 
 - `docker compose exec nlp sh`: NLP コンテナ内でシェルを開く

@@ -82,7 +82,7 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 	}
 	_, err = db.NewInsert().
 		Model(nlpConfig).
-		On("CONFLICT (model_name) DO NOTHING").
+		On("CONFLICT (max_token_length,overlap_token_length,model_name,model_vector_length) DO NOTHING").
 		Exec(context.Background())
 	if err != nil {
 		log.Error(err)
@@ -101,7 +101,6 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 		Set("keywords = ?", page.Keywords).
 		Set("markdown = ?", page.Markdown).
 		Set("hash = ?", page.Hash).
-		Set("vector = ?", vectors).
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(context.Background())
 	if err != nil {
@@ -121,7 +120,7 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 		}
 		_, err = db.NewInsert().
 			Model(chunkInfo).
-			On("CONFLICT (page_id, chunk) DO NOTHING").
+			On("CONFLICT (page_id) DO NOTHING").
 			Exec(context.Background())
 		if err != nil {
 			log.Error(err)
