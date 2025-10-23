@@ -3,7 +3,7 @@ package postgres
 
 import (
 	"app/controller/log"
-	"app/domain/model"
+	"app/usecase/entity"
 	"context"
 	"fmt"
 	"strings"
@@ -16,12 +16,13 @@ import (
   - return)		コサイン類似度が上位のページデータ
   - return) err	エラー
 */
-func GetSimilarVectors(vector []float32, resultLimit int) (similarVectors []model.VectorInfo, err error) {
+func GetSimilarVectors(vector []float32, resultLimit int) (similarPages []entity.DBPage, err error) {
 	vectorStr := vectorToString(vector)
 
+	var dbVectors []entity.DBVector
 	err = db.NewSelect().
-		Model(&similarVectors).
-		Relation("Chunk.Page").
+		Model(&dbVectors).
+		Relation("Chunk.Page.Domain").
 		OrderExpr("vector <=> ?", vectorStr).
 		Limit(resultLimit).
 		Scan(context.Background())
@@ -30,7 +31,15 @@ func GetSimilarVectors(vector []float32, resultLimit int) (similarVectors []mode
 		return nil, err
 	}
 
-	return similarVectors, nil
+	// entity.DBVector から entity.DBPage に変換（ドメイン情報を含む）
+	similarPages = make([]entity.DBPage, 0, len(dbVectors))
+	for _, dbVector := range dbVectors {
+		if dbVector.Chunk != nil && dbVector.Chunk.Page != nil {
+			similarPages = append(similarPages, *dbVector.Chunk.Page)
+		}
+	}
+
+	return similarPages, nil
 }
 
 // float32スライスをPostgreSQLのベクトル形式の文字列に変換

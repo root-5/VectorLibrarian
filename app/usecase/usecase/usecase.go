@@ -5,8 +5,17 @@ import (
 	"app/controller/log"
 	"app/controller/nlp"
 	"app/controller/postgres"
-	"app/domain/model"
 )
+
+// 検索結果用のページ情報（ドメイン文字列を含む）
+type PageWithDomain struct {
+	Domain      string `json:"domain"`
+	Path        string `json:"path"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Keywords    string `json:"keywords"`
+	Markdown    string `json:"markdown"`
+}
 
 /*
 ページデータのベクトル検索を行う関数
@@ -15,7 +24,7 @@ import (
   - return)	similarPages	コサイン類似度が上位のページデータ
   - return) err				エラー
 */
-func VectorSearch(query string, resultLimit int) (similarPages []model.VectorInfo, err error) {
+func VectorSearch(query string, resultLimit int) (similarPagesWithDomain []PageWithDomain, err error) {
 	resp, _ := nlp.ConvertToVector(query, false)
 
 	// 検索用にベクトルを一つにまとめる（平均を取る）
@@ -29,10 +38,28 @@ func VectorSearch(query string, resultLimit int) (similarPages []model.VectorInf
 		vector[i] /= float32(len(resp.Vectors))
 	}
 
-	similarPages, err = postgres.GetSimilarVectors(vector, resultLimit)
+	similarPages, err := postgres.GetSimilarVectors(vector, resultLimit)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	return similarPages, nil
+
+	// 検索結果を PageWithDomain に変換
+	similarPagesWithDomain = make([]PageWithDomain, 0, len(similarPages))
+	for _, page := range similarPages {
+		domainStr := ""
+		if page.Domain != nil {
+			domainStr = page.Domain.Domain
+		}
+		similarPagesWithDomain = append(similarPagesWithDomain, PageWithDomain{
+			Domain:      domainStr,
+			Path:        page.Path,
+			Title:       page.Title,
+			Description: page.Description,
+			Keywords:    page.Keywords,
+			Markdown:    page.Markdown,
+		})
+	}
+
+	return similarPagesWithDomain, nil
 }
