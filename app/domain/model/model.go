@@ -32,16 +32,15 @@ type PageInfo struct {
 
 // チャンク情報
 type ChunkInfo struct {
-	Chunk       string `bun:"chunk,notnull,type:text"` // チャンク
-	PageID      int64  `bun:"page_id,notnull,unique"`  // ページID
-	NlpConfigID int64  `bun:"nlp_config_id,notnull"`   // NLP設定ID
+	PageID int64  `bun:"page_id,notnull,unique"`  // ページID
+	Chunk  string `bun:"chunk,notnull,type:text"` // チャンク
 }
 
 // ベクトル情報
 type VectorInfo struct {
-	Vector      []float32 `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
-	ChunkID     int64     `bun:"chunk_id,notnull,unique"`         // チャンクID
 	NlpConfigID int64     `bun:"nlp_config_id,notnull"`           // NLP設定ID
+	ChunkID     int64     `bun:"chunk_id,notnull,unique"`         // チャンクID
+	Vector      []float32 `bun:"vector,notnull,type:vector(384)"` // ベクトルデータ（モデルの次元数に合わせて変更）
 }
 
 // NLP設定情報
