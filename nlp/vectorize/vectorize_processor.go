@@ -75,7 +75,7 @@ func chunkText(text string, maxToken int, overlapMaxToken int) (chunks []string)
 
 			// オーバーラップ分のトークン数を計算し、持ち越し分として次の現在のトークン数とする
 			overlapTokenCount := 0
-			roopCount := 0
+			loopCount := 0
 			for j := 0; j < len(tokenCounts); j++ {
 				additionalTokenCount := tokenCounts[len(tokenCounts)-1-j]
 				if overlapTokenCount+additionalTokenCount >= overlapMaxToken {
@@ -83,13 +83,13 @@ func chunkText(text string, maxToken int, overlapMaxToken int) (chunks []string)
 				} else {
 					overlapTokenCount += additionalTokenCount
 				}
-				roopCount++
+				loopCount++
 			}
 			currentTokenCount = overlapTokenCount
 
 			// オーバーラップ計算時のループ数から持ち越す文を計算、次の現在のチャンクとする
 			overlapChunk := []string{}
-			for j := 0; j < roopCount; j++ {
+			for j := 0; j < loopCount; j++ {
 				overlapChunk = append([]string{sentences[i-1-j]}, overlapChunk...)
 			}
 			currentChunk = overlapChunk
