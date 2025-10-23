@@ -169,49 +169,49 @@ func TestHtmlToPageData(t *testing.T) {
 	}
 	e := colly.NewHTMLElementFromSelectionNode(resp, doc.Find("html"), htmlNode, 0)
 
-	domain, path, pageTitle, description, keywords, markdown, hash, err := htmlToPageData(e)
+	pageInfo, err := htmlToPageData(e)
 
 	if err != nil {
 		t.Fatalf("予期しないエラー: %v", err)
 	}
 
-	expectedDomain := "example.com"
-	if domain != expectedDomain {
-		t.Errorf("期待されるドメイン '%s' ですが、実際は '%s' でした", expectedDomain, domain)
+	expectedDomainID := 0
+	if pageInfo.DomainID != int64(expectedDomainID) {
+		t.Errorf("期待されるドメイン '%d' ですが、実際は '%d' でした", expectedDomainID, pageInfo.DomainID)
 	}
 
 	expectedPath := "/test-path"
-	if path != expectedPath {
-		t.Errorf("期待されるパス '%s' ですが、実際は '%s' でした", expectedPath, path)
+	if pageInfo.Path != expectedPath {
+		t.Errorf("期待されるパス '%s' ですが、実際は '%s' でした", expectedPath, pageInfo.Path)
 	}
 
 	expectedTitle := "Test Title"
-	if pageTitle != expectedTitle {
-		t.Errorf("期待されるタイトル '%s' ですが、実際は '%s' でした", expectedTitle, pageTitle)
+	if pageInfo.Title != expectedTitle {
+		t.Errorf("期待されるタイトル '%s' ですが、実際は '%s' でした", expectedTitle, pageInfo.Title)
 	}
 
 	expectedDescription := "Test Description"
-	if description != expectedDescription {
-		t.Errorf("期待されるディスクリプション '%s' ですが、実際は '%s' でした", expectedDescription, description)
+	if pageInfo.Description != expectedDescription {
+		t.Errorf("期待されるディスクリプション '%s' ですが、実際は '%s' でした", expectedDescription, pageInfo.Description)
 	}
 
 	expectedKeywords := "Test, Keywords"
-	if keywords != expectedKeywords {
-		t.Errorf("期待されるキーワード '%s' ですが、実際は '%s' でした", expectedKeywords, keywords)
+	if pageInfo.Keywords != expectedKeywords {
+		t.Errorf("期待されるキーワード '%s' ですが、実際は '%s' でした", expectedKeywords, pageInfo.Keywords)
 	}
 
 	// path が "/" でないため header と footer は除去されるはず
-	if strings.Contains(markdown, "Header content") {
+	if strings.Contains(pageInfo.Markdown, "Header content") {
 		t.Errorf("Markdown に header の内容が含まれてはいけません")
 	}
-	if strings.Contains(markdown, "Footer content") {
+	if strings.Contains(pageInfo.Markdown, "Footer content") {
 		t.Errorf("Markdown に footer の内容が含まれてはいけません")
 	}
 
 	// 実際に生成された markdown から期待されるハッシュを計算
-	hashBin := sha1.Sum([]byte(markdown))
+	hashBin := sha1.Sum([]byte(pageInfo.Markdown))
 	expectedHash := hex.EncodeToString(hashBin[:])
-	if hash != expectedHash {
-		t.Errorf("期待されるハッシュ '%s' ですが、実際は '%s' でした", expectedHash, hash)
+	if pageInfo.Hash != expectedHash {
+		t.Errorf("期待されるハッシュ '%s' ですが、実際は '%s' でした", expectedHash, pageInfo.Hash)
 	}
 }

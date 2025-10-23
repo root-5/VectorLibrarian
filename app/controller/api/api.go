@@ -52,7 +52,8 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// ベクトル検索を実行
-		similarPages, err := usecase.VectorSearch(query, 20)
+		resultLimit := 20
+		similarPages, err := usecase.VectorSearch(query, resultLimit)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

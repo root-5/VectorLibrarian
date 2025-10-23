@@ -28,6 +28,7 @@ func Start() {
 	// テスト内容
 	// =======================================================================
 	// 初期設定・定数
+	targetDomainId := 1
 	targetDomain := "www.city.hamura.tokyo.jp"
 	startPath := "/prsite/0000000440.html"
 	allowedPaths := []string{
@@ -37,7 +38,7 @@ func Start() {
 	isTest := true
 
 	// クロールを開始
-	err = crawler.CrawlDomain(targetDomain, startPath, allowedPaths, maxScrapeDepth, isTest)
+	err = crawler.CrawlDomain(int64(targetDomainId), targetDomain, startPath, allowedPaths, maxScrapeDepth, isTest)
 	if err != nil {
 		log.Error(err)
 		return

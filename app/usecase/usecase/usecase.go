@@ -5,23 +5,84 @@ import (
 	"app/controller/log"
 	"app/controller/nlp"
 	"app/controller/postgres"
-	"app/domain/model"
 )
+
+// 検索結果用のページ情報（ドメイン文字列を含む）
+type PageWithDomain struct {
+	Domain      string `json:"domain"`
+	Path        string `json:"path"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Keywords    string `json:"keywords"`
+	Markdown    string `json:"markdown"`
+}
 
 /*
 ページデータのベクトル検索を行う関数
-  - query			検索クエリ
-  - limit			返却する件数
+  - query					検索クエリ
+  - resultLimit				返却する件数
   - return)	similarPages	コサイン類似度が上位のページデータ
-  - return) err		エラー
+  - return) err				エラー
 */
-func VectorSearch(query string, limit int) (similarPages []model.Page, err error) {
-	vector, _ := nlp.ConvertToVector(query, false)
+func VectorSearch(query string, resultLimit int) (similarPagesWithDomain []PageWithDomain, err error) {
+	resp, _ := nlp.ConvertToVector(query, false)
 
-	similarPages, err = postgres.GetSimilarPages(vector, limit)
+	// 検索用にベクトルを一つにまとめる（平均を取る）
+	vector := resp.Vectors[0]
+	for i := 1; i < len(resp.Vectors); i++ {
+		for j := 0; j < len(resp.Vectors[i]); j++ {
+			vector[j] += resp.Vectors[i][j]
+		}
+	}
+	for i := 0; i < len(vector); i++ {
+		vector[i] /= float32(len(resp.Vectors))
+	}
+
+	similarPages, scores, err := postgres.GetSimilarPages(vector, resultLimit)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	return similarPages, nil
+
+	// 検索結果を PageWithDomain に変換
+	similarPagesWithDomain = make([]PageWithDomain, 0, len(similarPages))
+	for _, page := range similarPages {
+		domainStr := ""
+		if page.Domain != nil {
+			domainStr = page.Domain.Domain
+		}
+		similarPagesWithDomain = append(similarPagesWithDomain, PageWithDomain{
+			Domain:      domainStr,
+			Path:        page.Path,
+			Title:       page.Title,
+			Description: page.Description,
+			Keywords:    page.Keywords,
+			Markdown:    page.Markdown,
+		})
+	}
+
+	// 同一パスを持つページが複数ある場合、スコアの高い方のみを残す
+	type PageWithScore struct {
+		Page  PageWithDomain
+		Score float32
+	}
+	pathToPage := make(map[string]PageWithScore)
+	for i, page := range similarPagesWithDomain {
+		key := page.Domain + page.Path
+		if existing, exists := pathToPage[key]; !exists || scores[i] > existing.Score {
+			pathToPage[key] = PageWithScore{
+				Page:  page,
+				Score: scores[i],
+			}
+		}
+	}
+
+	// マップから結果を抽出（スコア順にソート済みなので、最初に出てきたものが最高スコア）
+	filteredPages := make([]PageWithDomain, 0, len(pathToPage))
+	for _, pageWithScore := range pathToPage {
+		filteredPages = append(filteredPages, pageWithScore.Page)
+	}
+	similarPagesWithDomain = filteredPages
+
+	return similarPagesWithDomain, nil
 }

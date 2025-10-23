@@ -2,10 +2,13 @@ package nlp
 
 import (
 	"app/controller/log"
+	"app/domain/model"
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 // NLPサーバーへのリクエスト用の構造体
@@ -15,13 +18,11 @@ type ConvertRequest struct {
 }
 
 // NLPサーバーからのレスポンス用の構造体
+// nlp/api/api.go と同じ構造体
 type ConvertResponse struct {
-	InputText      string    `json:"input_text"`
-	NormalizedText string    `json:"normalized_text"`
-	IsQuery        bool      `json:"is_query"`
-	ModelName      string    `json:"model_name"`
-	Dimensions     int       `json:"dimensions"`
-	Vector         []float32 `json:"vector"`
+	model.NlpConfigInfo
+	Chunks  []string    `json:"chunks"`
+	Vectors [][]float32 `json:"vectors"`
 }
 
 /*
@@ -29,9 +30,9 @@ nlp サーバーにテキストを送信してベクトルに変換する関数
 正規化も nlp サーバー側で行う
   - text)		変換するテキスト
   - isQuery)	クエリかどうかの真偽値（True なら「query: 」、False なら「passage: 」のプレフィックスが文頭に付与される）
-  - return)		変換結果の構造体とエラー
+  - return)		最大トークン長、オーバーラップトークン長、モデル名、モデル特有のベクトル長、チャンクの配列、ベクトルの2次元配列、エラー
 */
-func ConvertToVector(text string, isQuery bool) ([]float32, error) {
+func ConvertToVector(text string, isQuery bool) (resp ConvertResponse, err error) {
 	// リクエストボディを作成
 	requestBody := ConvertRequest{
 		Text:    text,
@@ -41,23 +42,32 @@ func ConvertToVector(text string, isQuery bool) ([]float32, error) {
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return ConvertResponse{}, err
 	}
+
+	// リクエスト URL とタイムアウト設定
+	requestUrl := "http://" + os.Getenv("NLP_HOST") + ":" + os.Getenv("NLP_PORT") + "/convert"
+	client := &http.Client{Timeout: 600 * time.Second}
 
 	// POSTリクエストを送信
-	resp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":8000/convert", "application/json", bytes.NewBuffer(jsonData))
+	httpResp, err := client.Post(requestUrl, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return ConvertResponse{}, err
 	}
-	defer resp.Body.Close()
+	defer httpResp.Body.Close()
 
-	// 構造体に直接デコード
-	var result ConvertResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	bodyBytes, err := io.ReadAll(httpResp.Body)
+	if err != nil {
 		log.Error(err)
-		return nil, err
+		return ConvertResponse{}, err
 	}
 
-	return result.Vector, nil
+	// 構造体にデコード
+	if err := json.Unmarshal(bodyBytes, &resp); err != nil {
+		log.Error(err)
+		return ConvertResponse{}, err
+	}
+
+	return resp, nil
 }

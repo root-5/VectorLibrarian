@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"app/controller/log"
+	"app/domain/model"
 	"crypto/sha1"
 	"encoding/hex"
 	"regexp"
@@ -17,16 +18,10 @@ import (
 /*
 colly.HTMLElement からページに関する各データを抽出する関数
   - e					HTMLElement
-  - return)	domain		ドメイン
-  - return)	path		パス
-  - return)	pageTitle	ページタイトル
-  - return)	description	ディスクリプション
-  - return)	keywords	キーワード
-  - return)	markdown	マークダウン形式のコンテンツ
-  - return)	hash		コンテンツのハッシュ値
+  - return)	pageInfo	抽出したページ情報
   - return) err			エラー
 */
-func htmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description, keywords, markdown, hash string, err error) {
+func htmlToPageData(e *colly.HTMLElement) (pageInfo model.PageInfo, err error) {
 	// html-to-markdown のコンバーターを作成
 	conv := converter.NewConverter(
 		converter.WithPlugins(
@@ -40,21 +35,21 @@ func htmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description,
 	)
 
 	// URL からドメインとパスを取得
-	domain = e.Request.URL.Hostname()
-	path = e.Request.URL.Path
+	pageInfo.DomainID = 0 // 仮の値、後で設定する
+	pageInfo.Path = e.Request.URL.Path
 
 	// ページタイトル、ディスクリプション、キーワードを取得（それぞれ存在しない場合は "--" を設定）
-	pageTitle = e.ChildText("title")
-	if pageTitle == "" {
-		pageTitle = "--"
+	pageInfo.Title = e.ChildText("title")
+	if pageInfo.Title == "" {
+		pageInfo.Title = "--"
 	}
-	description = e.ChildAttr("meta[name=description]", "content")
-	if description == "" {
-		description = "--"
+	pageInfo.Description = e.ChildAttr("meta[name=description]", "content")
+	if pageInfo.Description == "" {
+		pageInfo.Description = "--"
 	}
-	keywords = e.ChildAttr("meta[name=keywords]", "content")
-	if keywords == "" {
-		keywords = "--"
+	pageInfo.Keywords = e.ChildAttr("meta[name=keywords]", "content")
+	if pageInfo.Keywords == "" {
+		pageInfo.Keywords = "--"
 	}
 
 	// head, header, footer, script タグを削除（ルートのみ header, footer は残す）
@@ -71,17 +66,17 @@ func htmlToPageData(e *colly.HTMLElement) (domain, path, pageTitle, description,
 		log.Error(err)
 		return
 	}
-	markdown, err = conv.ConvertString(html)
+	pageInfo.Markdown, err = conv.ConvertString(html)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	// markdown のハッシュを計算
-	hashBin := sha1.Sum([]byte(markdown))
-	hash = hex.EncodeToString(hashBin[:])
+	hashBin := sha1.Sum([]byte(pageInfo.Markdown))
+	pageInfo.Hash = hex.EncodeToString(hashBin[:])
 
-	return domain, path, pageTitle, description, keywords, markdown, hash, nil
+	return pageInfo, nil
 }
 
 /*

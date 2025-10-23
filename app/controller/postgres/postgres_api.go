@@ -3,33 +3,56 @@ package postgres
 
 import (
 	"app/controller/log"
-	"app/domain/model"
+	"app/usecase/entity"
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/uptrace/bun"
 )
 
 /*
 ベクトルを入力して、コサイン類似度が上位のデータを指定の件数返却する関数
   - vector		入力するベクトル
-  - limit		返却する件数
+  - resultLimit	返却する件数
   - return)		コサイン類似度が上位のページデータ
+  - return)		コサイン類似度スコア（1に近いほど類似）
   - return) err	エラー
 */
-func GetSimilarPages(vector []float32, limit int) (pages []model.Page, err error) {
+func GetSimilarPages(vector []float32, resultLimit int) (similarPages []entity.DBPage, scores []float32, err error) {
 	vectorStr := vectorToString(vector)
 
+	// スコアを含むクエリ結果用の構造体
+	type VectorWithScore struct {
+		bun.BaseModel `bun:"table:vectors,alias:vectors"`
+		entity.DBVector
+		Score float32 `bun:"score"`
+	}
+
+	var results []VectorWithScore
 	err = db.NewSelect().
-		Model(&pages).
+		Model(&results).
+		Relation("Chunk.Page.Domain").
+		ColumnExpr("vectors.*, 1 - (vector <=> ?) AS score", vectorStr).
 		OrderExpr("vector <=> ?", vectorStr).
-		Limit(limit).
+		Limit(resultLimit).
 		Scan(context.Background())
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
 
-	return pages, nil
+	// entity.DBVector から entity.DBPage に変換（ドメイン情報を含む）
+	similarPages = make([]entity.DBPage, 0, len(results))
+	scores = make([]float32, 0, len(results))
+	for _, result := range results {
+		if result.Chunk != nil && result.Chunk.Page != nil {
+			similarPages = append(similarPages, *result.Chunk.Page)
+			scores = append(scores, result.Score)
+		}
+	}
+
+	return similarPages, scores, nil
 }
 
 // float32スライスをPostgreSQLのベクトル形式の文字列に変換
