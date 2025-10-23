@@ -32,8 +32,8 @@ type PageInfo struct {
 
 // チャンク情報
 type ChunkInfo struct {
-	PageID int64  `bun:"page_id,notnull,unique"`  // ページID
-	Chunk  string `bun:"chunk,notnull,type:text"` // チャンク
+	PageID int64  `bun:"page_id,notnull,unique:chunk_unique"`  // ページID
+	Chunk  string `bun:"chunk,notnull,unique:chunk_unique,type:text"` // チャンク
 }
 
 // ベクトル情報

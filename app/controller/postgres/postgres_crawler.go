@@ -120,7 +120,7 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 		}
 		_, err = db.NewInsert().
 			Model(chunkInfo).
-			On("CONFLICT (page_id) DO NOTHING").
+			On("CONFLICT (page_id, chunk) DO NOTHING").
 			Exec(context.Background())
 		if err != nil {
 			log.Error(err)
@@ -129,9 +129,9 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 
 		// ベクトル情報を保存
 		vectorData := model.VectorInfo{
-			Vector:      vectors[i],
-			ChunkID:     chunkInfo.ID,
 			NlpConfigID: nlpConfig.ID,
+			ChunkID:     chunkInfo.ID,
+			Vector:      vectors[i],
 		}
 		vectorInfo := &entity.DBVector{
 			VectorInfo: vectorData,
