@@ -38,7 +38,7 @@ func VectorSearch(query string, resultLimit int) (similarPagesWithDomain []PageW
 		vector[i] /= float32(len(resp.Vectors))
 	}
 
-	similarPages, err := postgres.GetSimilarVectors(vector, resultLimit)
+	similarPages, scores, err := postgres.GetSimilarPages(vector, resultLimit)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -60,6 +60,29 @@ func VectorSearch(query string, resultLimit int) (similarPagesWithDomain []PageW
 			Markdown:    page.Markdown,
 		})
 	}
+
+	// 同一パスを持つページが複数ある場合、スコアの高い方のみを残す
+	type PageWithScore struct {
+		Page  PageWithDomain
+		Score float32
+	}
+	pathToPage := make(map[string]PageWithScore)
+	for i, page := range similarPagesWithDomain {
+		key := page.Domain + page.Path
+		if existing, exists := pathToPage[key]; !exists || scores[i] > existing.Score {
+			pathToPage[key] = PageWithScore{
+				Page:  page,
+				Score: scores[i],
+			}
+		}
+	}
+
+	// マップから結果を抽出（スコア順にソート済みなので、最初に出てきたものが最高スコア）
+	filteredPages := make([]PageWithDomain, 0, len(pathToPage))
+	for _, pageWithScore := range pathToPage {
+		filteredPages = append(filteredPages, pageWithScore.Page)
+	}
+	similarPagesWithDomain = filteredPages
 
 	return similarPagesWithDomain, nil
 }
