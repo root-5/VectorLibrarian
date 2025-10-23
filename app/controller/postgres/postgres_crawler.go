@@ -5,8 +5,6 @@ import (
 	"app/controller/log"
 	"app/controller/nlp"
 	"app/domain/model"
-	"fmt"
-
 	"app/usecase/entity"
 	"context"
 	"unicode/utf8"
@@ -64,15 +62,11 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 	page.Title = truncateRunes(page.Title, 100)
 	page.Description = truncateRunes(page.Description, 255)
 	page.Keywords = truncateRunes(page.Keywords, 255)
-	log.Info(">> Saving:" + page.Title)
 
 	// チャンク情報、ベクトル情報、NLP設定情報
 	chunks := convertResult.Chunks
 	vectors := convertResult.Vectors
-	NlpConfigInfo := convertResult.NlpConfigInfo
-
-	// chunks の長さ
-	log.Info(">> Chunks length: " + fmt.Sprintf("%d", len(chunks)))
+	nlpConfigInfo := convertResult.NlpConfigInfo
 
 	// トランザクション開始
 	ctx := context.Background()
@@ -88,7 +82,7 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 	}()
 
 	// NLP設定を保存（UPDATE 文以下はコンフリクト時に既存のレコードのIDを取得するためのもの）
-	nlpConfig := &entity.DBNlpConfig{NlpConfigInfo: NlpConfigInfo}
+	nlpConfig := &entity.DBNlpConfig{NlpConfigInfo: nlpConfigInfo}
 	_, err = tx.NewInsert().
 		Model(nlpConfig).
 		On("CONFLICT (max_token_length,overlap_token_length,model_name,model_vector_length) DO UPDATE SET max_token_length = EXCLUDED.max_token_length").
@@ -130,7 +124,7 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 		}
 		_, err = tx.NewInsert().
 			Model(chunkInfo).
-			On("CONFLICT (nlp_config_id, page_id, chunk) DO NOTHING").
+			On("CONFLICT (nlp_config_id, page_id, chunk) DO UPDATE SET chunk = EXCLUDED.chunk").
 			Returning("id").
 			Exec(ctx)
 		if err != nil {
@@ -162,9 +156,6 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 		log.Error(err)
 		return err
 	}
-
-	// 正常終了
-	log.Info(">> OK !!")
 
 	return nil
 }
