@@ -5,8 +5,10 @@ import (
 	"app/domain/model"
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 // NLPサーバーへのリクエスト用の構造体
@@ -43,16 +45,26 @@ func ConvertToVector(text string, isQuery bool) (resp ConvertResponse, err error
 		return ConvertResponse{}, err
 	}
 
+	// リクエスト URL とタイムアウト設定
+	requestUrl := "http://" + os.Getenv("NLP_HOST") + ":" + os.Getenv("NLP_PORT") + "/convert"
+	client := &http.Client{Timeout: 600 * time.Second}
+
 	// POSTリクエストを送信
-	httpResp, err := http.Post("http://"+os.Getenv("NLP_HOST")+":"+os.Getenv("NLP_PORT")+"/convert", "application/json", bytes.NewBuffer(jsonData))
+	httpResp, err := client.Post(requestUrl, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Error(err)
 		return ConvertResponse{}, err
 	}
 	defer httpResp.Body.Close()
 
-	// 構造体に直接デコード
-	if err := json.NewDecoder(httpResp.Body).Decode(&resp); err != nil {
+	bodyBytes, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		log.Error(err)
+		return ConvertResponse{}, err
+	}
+
+	// 構造体にデコード
+	if err := json.Unmarshal(bodyBytes, &resp); err != nil {
 		log.Error(err)
 		return ConvertResponse{}, err
 	}

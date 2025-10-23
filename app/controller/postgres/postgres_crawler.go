@@ -63,6 +63,7 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 	page.Title = truncateRunes(page.Title, 100)
 	page.Description = truncateRunes(page.Description, 255)
 	page.Keywords = truncateRunes(page.Keywords, 255)
+	log.Info(">> Saving:" + page.Title)
 
 	// チャンク情報、ベクトル情報、NLP設定情報
 	chunks := convertResult.Chunks
@@ -155,7 +156,7 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 	}
 
 	// 正常終了
-	log.Info("大成功！！！！！！！")
+	log.Info(">> OK !!")
 
 	return nil
 }
