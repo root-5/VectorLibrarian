@@ -10,12 +10,12 @@ import (
 
 /*
 ページデータのベクトル検索を行う関数
-  - query			検索クエリ
-  - limit			返却する件数
+  - query					検索クエリ
+  - resultLimit				返却する件数
   - return)	similarPages	コサイン類似度が上位のページデータ
-  - return) err		エラー
+  - return) err				エラー
 */
-func VectorSearch(query string, limit int) (similarPages []model.VectorInfo, err error) {
+func VectorSearch(query string, resultLimit int) (similarPages []model.VectorInfo, err error) {
 	resp, _ := nlp.ConvertToVector(query, false)
 
 	// 検索用にベクトルを一つにまとめる（平均を取る）
@@ -29,7 +29,7 @@ func VectorSearch(query string, limit int) (similarPages []model.VectorInfo, err
 		vector[i] /= float32(len(resp.Vectors))
 	}
 
-	similarPages, err = postgres.GetSimilarVectors(vector, limit)
+	similarPages, err = postgres.GetSimilarVectors(vector, resultLimit)
 	if err != nil {
 		log.Error(err)
 		return nil, err

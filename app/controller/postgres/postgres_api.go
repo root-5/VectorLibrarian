@@ -12,18 +12,18 @@ import (
 /*
 ベクトルを入力して、コサイン類似度が上位のデータを指定の件数返却する関数
   - vector		入力するベクトル
-  - limit		返却する件数
+  - resultLimit	返却する件数
   - return)		コサイン類似度が上位のページデータ
   - return) err	エラー
 */
-func GetSimilarVectors(vector []float32, limit int) (similarVectors []model.VectorInfo, err error) {
+func GetSimilarVectors(vector []float32, resultLimit int) (similarVectors []model.VectorInfo, err error) {
 	vectorStr := vectorToString(vector)
 
 	err = db.NewSelect().
 		Model(&similarVectors).
 		Relation("Chunk.Page").
 		OrderExpr("vector <=> ?", vectorStr).
-		Limit(limit).
+		Limit(resultLimit).
 		Scan(context.Background())
 	if err != nil {
 		log.Error(err)
