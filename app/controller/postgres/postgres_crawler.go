@@ -112,9 +112,8 @@ func SaveCrawledData(page model.PageInfo, convertResult nlp.ConvertResponse) (er
 	for i, chunk := range chunks {
 		// チャンク情報を保存
 		chunkData := model.ChunkInfo{
-			Chunk:       chunk,
-			PageID:      dbPage.ID,
-			NlpConfigID: nlpConfig.ID,
+			PageID: dbPage.ID,
+			Chunk:  chunk,
 		}
 		chunkInfo := &entity.DBChunk{
 			ChunkInfo: chunkData,
