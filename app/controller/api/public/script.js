@@ -60,15 +60,63 @@ if (window.location.pathname === '/chat') {
   const chatInput = document.getElementById('chat-input');
   const sendButton = document.getElementById('send-button');
 
-  // メッセージを追加する関数
-  function addMessage(role, content, sources = null) {
+  // ストリーミングメッセージを作成
+  function createStreamingMessage() {
     const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message');
-    messageDiv.classList.add(role === 'user' ? 'user-message' : 'assistant-message');
+    messageDiv.classList.add('message', 'assistant-message');
 
     const roleDiv = document.createElement('div');
     roleDiv.classList.add('message-role');
-    roleDiv.textContent = role === 'user' ? 'あなた' : 'アシスタント';
+    roleDiv.textContent = 'アシスタント';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('message-content');
+    contentDiv.id = 'streaming-content';
+
+    messageDiv.appendChild(roleDiv);
+    messageDiv.appendChild(contentDiv);
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    return { messageDiv, contentDiv };
+  }
+
+  // ソース情報を追加
+  function addSourcesToMessage(messageDiv, sources) {
+    const sourcesDiv = document.createElement('div');
+    sourcesDiv.classList.add('sources');
+
+    const sourcesTitle = document.createElement('div');
+    sourcesTitle.classList.add('sources-title');
+    sourcesTitle.textContent = '参照元:';
+    sourcesDiv.appendChild(sourcesTitle);
+
+    sources.forEach((source, index) => {
+      const sourceItem = document.createElement('div');
+      sourceItem.classList.add('source-item');
+
+      const sourceLink = document.createElement('a');
+      sourceLink.classList.add('source-link');
+      sourceLink.href = `https://${source.domain}${source.path}`;
+      sourceLink.target = '_blank';
+      sourceLink.rel = 'noopener noreferrer';
+      sourceLink.textContent = `${index + 1}. ${source.title}`;
+
+      sourceItem.appendChild(sourceLink);
+      sourcesDiv.appendChild(sourceItem);
+    });
+
+    messageDiv.appendChild(sourcesDiv);
+  }
+
+  // ユーザーメッセージを追加
+  function addUserMessage(content) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', 'user-message');
+
+    const roleDiv = document.createElement('div');
+    roleDiv.classList.add('message-role');
+    roleDiv.textContent = 'あなた';
 
     const contentDiv = document.createElement('div');
     contentDiv.classList.add('message-content');
@@ -76,99 +124,90 @@ if (window.location.pathname === '/chat') {
 
     messageDiv.appendChild(roleDiv);
     messageDiv.appendChild(contentDiv);
-
-    // ソース情報を追加
-    if (sources && sources.length > 0) {
-      const sourcesDiv = document.createElement('div');
-      sourcesDiv.classList.add('sources');
-
-      const sourcesTitle = document.createElement('div');
-      sourcesTitle.classList.add('sources-title');
-      sourcesTitle.textContent = '参照元:';
-      sourcesDiv.appendChild(sourcesTitle);
-
-      sources.forEach((source, index) => {
-        const sourceItem = document.createElement('div');
-        sourceItem.classList.add('source-item');
-
-        const sourceLink = document.createElement('a');
-        sourceLink.classList.add('source-link');
-        sourceLink.href = `https://${source.domain}${source.path}`;
-        sourceLink.target = '_blank';
-        sourceLink.rel = 'noopener noreferrer';
-        sourceLink.textContent = `${index + 1}. ${source.title}`;
-
-        sourceItem.appendChild(sourceLink);
-        sourcesDiv.appendChild(sourceItem);
-      });
-
-      messageDiv.appendChild(sourcesDiv);
-    }
-
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  // ローディング表示を追加
-  function addLoadingMessage() {
-    const loadingDiv = document.createElement('div');
-    loadingDiv.classList.add('loading');
-    loadingDiv.id = 'loading-message';
-    loadingDiv.textContent = '回答を生成中...';
-    chatMessages.appendChild(loadingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  // ローディング表示を削除
-  function removeLoadingMessage() {
-    const loadingDiv = document.getElementById('loading-message');
-    if (loadingDiv) {
-      loadingDiv.remove();
-    }
-  }
-
-  // エラーメッセージを表示
-  function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.classList.add('error-message');
-    errorDiv.textContent = `エラー: ${message}`;
-    chatMessages.appendChild(errorDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  // メッセージを送信する関数
+  // メッセージを送信する関数（ストリーミング対応）
   async function sendMessage() {
     const query = chatInput.value.trim();
     if (query === '') return;
 
     // ユーザーメッセージを表示
-    addMessage('user', query);
+    addUserMessage(query);
     chatInput.value = '';
 
     // ボタンを無効化
     sendButton.disabled = true;
     chatInput.disabled = true;
 
-    // ローディング表示
-    addLoadingMessage();
+    // ストリーミングメッセージを作成
+    const { messageDiv, contentDiv } = createStreamingMessage();
+    let fullContent = '';
+    let sources = null;
 
     try {
       const response = await fetch(`/rag_search?q=${encodeURIComponent(query)}`);
-
-      removeLoadingMessage();
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      // アシスタントの回答を表示
-      addMessage('assistant', data.answer, data.sources);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+
+        // 最後の行は不完全な可能性があるので保持
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            console.log('Received data:', data); // デバッグログ
+
+            try {
+              const parsed = JSON.parse(data);
+              console.log('Parsed:', parsed, 'Type:', typeof parsed); // デバッグログ
+
+              // オブジェクトの場合（sources, error, done）
+              if (typeof parsed === 'object' && parsed !== null) {
+                if (parsed.type === 'sources') {
+                  sources = parsed.data.sources;
+                  console.log('Sources received:', sources);
+                } else if (parsed.type === 'error') {
+                  contentDiv.textContent = `エラー: ${parsed.message}`;
+                } else if (parsed.type === 'done') {
+                  // ストリーミング完了
+                  console.log('Stream done, adding sources');
+                  if (sources) {
+                    addSourcesToMessage(messageDiv, sources);
+                  }
+                }
+              } else {
+                // 文字列の場合（テキストチャンク）
+                console.log('Adding text chunk:', parsed);
+                fullContent += parsed;
+                contentDiv.textContent = fullContent;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+            } catch (e) {
+              console.log('Parse error for data:', data, e);
+            }
+          }
+        }
+      }
     } catch (error) {
-      removeLoadingMessage();
       console.error('エラーが発生しました:', error);
-      showError('回答の生成中にエラーが発生しました。もう一度お試しください。');
+      contentDiv.textContent = '回答の生成中にエラーが発生しました。もう一度お試しください。';
     } finally {
       // ボタンを有効化
       sendButton.disabled = false;
