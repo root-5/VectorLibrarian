@@ -9,8 +9,8 @@ import (
 var jobs = Jobs{
 	{
 		Name:        "クローリング開始",
-		Duration:    6 * time.Hour,
-		Function:    crawler.Start, // クローリングを開始する関数
+		Duration:    7 * 24 * time.Hour, // 7日ごとに実行
+		Function:    crawler.Start,      // クローリングを開始する関数
 		ExecuteFlag: true,
 	},
 }

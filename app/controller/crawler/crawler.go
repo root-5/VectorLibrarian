@@ -13,9 +13,9 @@ import (
 // スケジューラーから呼び出すための関数、一旦定数などもここで設定
 func Start() (err error) {
 	// 初期設定・定数
-	startPath := "/prsite"
+	startPath := "/"
 	allowedPaths := []string{
-		"/prsite", // すべてのパスを許可する場合は "/" のみ指定
+		"/", // すべてのパスを許可する場合は "/" のみ指定
 	}
 	maxScrapeDepth := 7
 
@@ -84,9 +84,6 @@ func CrawlDomain(targetDomainId int64, targetDomain string, startPath string, al
 
 	// リクエスト前に "アクセス >> " を表示
 	c.OnRequest(func(r *colly.Request) {
-		// if isTest {
-		// 	log.Info(">> URL:" + r.URL.String())
-		// }
 		log.Info(">> URL:" + r.URL.String())
 	})
 
