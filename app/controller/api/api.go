@@ -3,6 +3,7 @@ package api
 
 import (
 	"app/controller/log"
+	"app/controller/openai"
 	"app/usecase/usecase"
 	"encoding/json"
 	"fmt"
@@ -61,6 +62,46 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		sendJsonResponse(w, similarPages)
 
+	// RAG検索（ベクトル検索 + OpenAI API）
+	case "/rag_search":
+		// 検索クエリを取得
+		query := r.URL.Query().Get("q")
+		if query == "" {
+			log.Info("query parameter 'q' is required")
+			http.Error(w, "query parameter 'q' is required", http.StatusBadRequest)
+			return
+		}
+		// ベクトル検索を実行（上位3件）
+		resultLimit := 3
+		similarPages, err := usecase.VectorSearch(query, resultLimit)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// 検索結果のMarkdownを収集
+		contextMarkdowns := make([]string, 0, len(similarPages))
+		for _, page := range similarPages {
+			contextMarkdowns = append(contextMarkdowns, page.Markdown)
+		}
+
+		// OpenAI APIでRAG応答を生成
+		answer, err := openai.GenerateRAGResponse(query, contextMarkdowns)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// レスポンスを構築
+		response := map[string]interface{}{
+			"answer":       answer,
+			"sources":      similarPages,
+			"source_count": len(similarPages),
+		}
+		sendJsonResponse(w, response)
+
 	// ファビコン
 	case "/favicon.ico":
 		http.ServeFile(w, r, "controller/api/public/smile.ico")
@@ -72,6 +113,10 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	// index.html
 	case "/":
 		http.ServeFile(w, r, "controller/api/public/index.html")
+
+	// チャット画面
+	case "/chat.html":
+		http.ServeFile(w, r, "controller/api/public/chat.html")
 
 	default:
 		// アクセス元のIPアドレスを取得
