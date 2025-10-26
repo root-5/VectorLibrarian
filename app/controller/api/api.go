@@ -62,7 +62,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		sendJsonResponse(w, similarPages)
 
-	// RAG検索（ベクトル検索 + OpenAI API）
+	// RAG検索（ベクトル検索 + OpenAI API）- ストリーミング対応
 	case "/rag_search":
 		// 検索クエリを取得
 		query := r.URL.Query().Get("q")
@@ -87,21 +87,43 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 			contextMarkdowns = append(contextMarkdowns, page.Markdown)
 		}
 
-		// OpenAI APIでRAG応答を生成
-		answer, err := openai.GenerateRAGResponse(query, contextMarkdowns)
+		// SSE（Server-Sent Events）のヘッダーを設定
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		// まず参照元情報を送信
+		sourcesJSON, _ := json.Marshal(map[string]interface{}{
+			"sources":      similarPages,
+			"source_count": len(similarPages),
+		})
+		fmt.Fprintf(w, "data: {\"type\":\"sources\",\"data\":%s}\n\n", sourcesJSON)
+		if flusher, ok := w.(http.Flusher); ok {
+			flusher.Flush()
+		}
+
+		// OpenAI APIでRAG応答をストリーミング生成
+		fmt.Fprintf(w, "data: {\"type\":\"start\"}\n\n")
+		if flusher, ok := w.(http.Flusher); ok {
+			flusher.Flush()
+		}
+
+		err = openai.GenerateRAGResponseStream(query, contextMarkdowns, w)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			fmt.Fprintf(w, "data: {\"type\":\"error\",\"message\":\"%s\"}\n\n", err.Error())
+			if flusher, ok := w.(http.Flusher); ok {
+				flusher.Flush()
+			}
 			return
 		}
 
-		// レスポンスを構築
-		response := map[string]interface{}{
-			"answer":       answer,
-			"sources":      similarPages,
-			"source_count": len(similarPages),
+		// 完了メッセージを送信
+		fmt.Fprintf(w, "data: {\"type\":\"done\"}\n\n")
+		if flusher, ok := w.(http.Flusher); ok {
+			flusher.Flush()
 		}
-		sendJsonResponse(w, response)
 
 	// 静的ファイル
 	case "/favicon.ico":
