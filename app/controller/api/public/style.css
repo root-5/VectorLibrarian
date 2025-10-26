@@ -24,6 +24,26 @@ h1 {
     margin-bottom: 20px;
 }
 
+.nav-links {
+    margin: 10px 0 20px 0;
+    text-align: left;
+}
+
+.nav-links a {
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 4px;
+    background: #f0f7ff;
+    transition: background 0.2s;
+}
+
+.nav-links a:hover {
+    background: #e3f2fd;
+    text-decoration: underline;
+}
+
 /* ========================================== */
 /* index.html */
 /* ========================================== */
@@ -94,6 +114,11 @@ h1 {
 /* ========================================== */
 /* chat.html */
 /* ========================================== */
+
+.chat-description {
+    color: #666;
+    margin-bottom: 20px;
+}
 
 .chat-container {
     max-width: 900px;
