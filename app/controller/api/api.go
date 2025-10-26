@@ -3,7 +3,6 @@ package api
 
 import (
 	"app/controller/log"
-	"app/controller/openai"
 	"app/usecase/usecase"
 	"encoding/json"
 	"fmt"
@@ -109,7 +108,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 			flusher.Flush()
 		}
 
-		err = openai.GenerateRAGResponseStream(query, contextMarkdowns, w)
+		err = generateRAGResponseStream(query, contextMarkdowns, w)
 		if err != nil {
 			log.Error(err)
 			fmt.Fprintf(w, "data: {\"type\":\"error\",\"message\":\"%s\"}\n\n", err.Error())

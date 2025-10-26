@@ -1,5 +1,5 @@
 // OpenAI APIを利用するための関数をまとめたパッケージ
-package openai
+package api
 
 import (
 	"app/controller/log"
@@ -47,7 +47,7 @@ OpenAI APIを呼び出してRAG応答をストリーミングで生成する関�
   - writer				ストリーミング結果を書き込むWriter
   - return) err			エラー
 */
-func GenerateRAGResponseStream(query string, contextMarkdowns []string, writer io.Writer) error {
+func generateRAGResponseStream(query string, contextMarkdowns []string, writer io.Writer) error {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	modelName := os.Getenv("OPENAI_MODEL_NAME")
 	if modelName == "" {
