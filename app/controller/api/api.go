@@ -71,8 +71,9 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "query parameter 'q' is required", http.StatusBadRequest)
 			return
 		}
-		// ベクトル検索を実行（上位3件）
-		resultLimit := 3
+
+		// ベクトル検索を実行（上位5件）
+		resultLimit := 5
 		similarPages, err := usecase.VectorSearch(query, resultLimit)
 		if err != nil {
 			log.Error(err)
@@ -102,21 +103,19 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		sendJsonResponse(w, response)
 
-	// ファビコン
+	// 静的ファイル
 	case "/favicon.ico":
 		http.ServeFile(w, r, "controller/api/public/smile.ico")
-
-	// CSS
 	case "/style.css":
 		http.ServeFile(w, r, "controller/api/public/style.css")
+	case "/script.js":
+		http.ServeFile(w, r, "controller/api/public/script.js")
 
-	// index.html
+	// HTML
+	case "/chat":
+		http.ServeFile(w, r, "controller/api/public/chat.html")
 	case "/":
 		http.ServeFile(w, r, "controller/api/public/index.html")
-
-	// チャット画面
-	case "/chat.html":
-		http.ServeFile(w, r, "controller/api/public/chat.html")
 
 	default:
 		// アクセス元のIPアドレスを取得

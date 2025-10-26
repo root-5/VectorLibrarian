@@ -24,6 +24,10 @@ h1 {
     margin-bottom: 20px;
 }
 
+/* ========================================== */
+/* index.html */
+/* ========================================== */
+
 .search-box {
     display: flex;
     justify-content: center;
@@ -85,4 +89,128 @@ h1 {
 
 .result-item a:hover {
     text-decoration: underline;
+}
+
+/* ========================================== */
+/* chat.html */
+/* ========================================== */
+
+.chat-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.chat-messages {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    margin-bottom: 20px;
+}
+
+.message {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.user-message {
+    background-color: #e3f2fd;
+    margin-left: 10%;
+    text-align: right;
+}
+
+.assistant-message {
+    background-color: #fff;
+    margin-right: 10%;
+    border: 1px solid #e0e0e0;
+}
+
+.message-role {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.message-content {
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.sources {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.sources-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.source-item {
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+.source-link {
+    color: #1976d2;
+    text-decoration: none;
+}
+
+.source-link:hover {
+    text-decoration: underline;
+}
+
+.input-area {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.send-button {
+    padding: 12px 30px;
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.send-button:hover {
+    background-color: #1565c0;
+}
+
+.send-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
 }
