@@ -60,6 +60,111 @@ if (window.location.pathname === '/chat') {
   const chatInput = document.getElementById('chat-input');
   const sendButton = document.getElementById('send-button');
 
+  // Markdownを簡易的にHTMLに変換する関数
+  function markdownToHtml(text) {
+    // エスケープ処理
+    const escapeHtml = (str) => {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    };
+
+    let html = text;
+
+    // 行ごとに処理
+    const lines = html.split('\n');
+    const processedLines = [];
+    let listStack = []; // ネストレベルを管理するスタック
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      const trimmedLine = line.trim();
+
+      // 空行の処理
+      if (trimmedLine === '') {
+        // リスト中の空行はリストを閉じる
+        while (listStack.length > 0) {
+          processedLines.push('</ul>');
+          listStack.pop();
+        }
+        continue;
+      }
+
+      // 区切り線（---）をスキップ
+      if (trimmedLine === '---' || trimmedLine.match(/^-{3,}$/)) {
+        while (listStack.length > 0) {
+          processedLines.push('</ul>');
+          listStack.pop();
+        }
+        continue;
+      }
+
+      // 見出し (# ## ### ####)
+      if (line.match(/^(#{1,4})\s+(.+)$/)) {
+        const match = line.match(/^(#{1,4})\s+(.+)$/);
+        const level = match[1].length;
+        const content = escapeHtml(match[2]);
+        while (listStack.length > 0) {
+          processedLines.push('</ul>');
+          listStack.pop();
+        }
+        processedLines.push(`<h${level}>${content}</h${level}>`);
+      }
+      // 箇条書き (- または * で始まる、インデント対応)
+      else if (line.match(/^(\s*)([\-\*])\s+(.+)$/)) {
+        const match = line.match(/^(\s*)([\-\*])\s+(.+)$/);
+        const indent = match[1].length;
+        let content = match[3];
+
+        // インデントレベルを計算（4スペース = 1レベル）
+        const currentLevel = Math.floor(indent / 4);
+
+        // 太字処理
+        content = content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/__(.+?)__/g, '<strong>$1</strong>');
+        content = escapeHtml(content)
+          .replace(/&lt;strong&gt;/g, '<strong>')
+          .replace(/&lt;\/strong&gt;/g, '</strong>');
+
+        // リストのネストレベル調整
+        while (listStack.length > currentLevel + 1) {
+          processedLines.push('</ul>');
+          listStack.pop();
+        }
+
+        if (listStack.length === currentLevel) {
+          processedLines.push('<ul>');
+          listStack.push(currentLevel);
+        }
+
+        processedLines.push(`<li>${content}</li>`);
+      }
+      // 通常のテキスト
+      else {
+        while (listStack.length > 0) {
+          processedLines.push('</ul>');
+          listStack.pop();
+        }
+        // 太字処理 (**text** または __text__)
+        line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        line = line.replace(/__(.+?)__/g, '<strong>$1</strong>');
+        line = escapeHtml(line)
+          .replace(/&lt;strong&gt;/g, '<strong>')
+          .replace(/&lt;\/strong&gt;/g, '</strong>');
+        processedLines.push(`<p>${line}</p>`);
+      }
+    }
+
+    // 最後にリストが閉じられていない場合
+    while (listStack.length > 0) {
+      processedLines.push('</ul>');
+      listStack.pop();
+    }
+
+    // 改行なしで結合
+    return processedLines.join('');
+  }
+
   // ストリーミングメッセージを作成
   function createStreamingMessage() {
     const messageDiv = document.createElement('div');
@@ -172,31 +277,27 @@ if (window.location.pathname === '/chat') {
 
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim();
-            console.log('Received data:', data); // デバッグログ
 
             try {
               const parsed = JSON.parse(data);
-              console.log('Parsed:', parsed, 'Type:', typeof parsed); // デバッグログ
 
               // オブジェクトの場合（sources, error, done）
               if (typeof parsed === 'object' && parsed !== null) {
                 if (parsed.type === 'sources') {
                   sources = parsed.data.sources;
-                  console.log('Sources received:', sources);
                 } else if (parsed.type === 'error') {
                   contentDiv.textContent = `エラー: ${parsed.message}`;
                 } else if (parsed.type === 'done') {
                   // ストリーミング完了
-                  console.log('Stream done, adding sources');
                   if (sources) {
                     addSourcesToMessage(messageDiv, sources);
                   }
                 }
               } else {
                 // 文字列の場合（テキストチャンク）
-                console.log('Adding text chunk:', parsed);
                 fullContent += parsed;
-                contentDiv.textContent = fullContent;
+                // MarkdownをHTMLに変換して表示
+                contentDiv.innerHTML = markdownToHtml(fullContent);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
               }
             } catch (e) {
