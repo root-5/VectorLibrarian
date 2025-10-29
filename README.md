@@ -67,6 +67,8 @@ WEBページの文章をベクトル化して保存し、ベクトル検索が�
 
 ## コマンド
 
+ローカル環境: <http://localhost:8080/>
+
 - `docker compose up -d`: 開発環境コンテナの起動
 - `docker compose down`: 開発環境コンテナの停止
 - `docker compose down --rmi all`: 開発環境コンテナの停止とイメージの削除
