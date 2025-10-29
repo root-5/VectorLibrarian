@@ -13,9 +13,9 @@ import (
 // スケジューラーから呼び出すための関数、一旦定数などもここで設定
 func Start() (err error) {
 	// 初期設定・定数
-	startPath := "/"
+	startPath := "/prsite"
 	allowedPaths := []string{
-		"/", // すべてのパスを許可する場合は "/" のみ指定
+		"/prsite", // すべてのパスを許可する場合は "/" のみ指定
 	}
 	maxScrapeDepth := 7
 
