@@ -29,7 +29,7 @@ func schedulerExec(jobs Jobs) {
 				}
 			}(job)
 		}
-		// Jobs を確実に上から実行するために3秒待機
+		// Jobs を確実に上から実行するために1秒待機
 		time.Sleep(1 * time.Second)
 	}
 }
