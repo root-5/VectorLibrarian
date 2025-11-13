@@ -47,7 +47,7 @@ func ConvertToVector(text string, isQuery bool) (resp ConvertResponse, err error
 
 	// リクエスト URL とタイムアウト設定
 	requestUrl := "http://" + os.Getenv("NLP_HOST") + ":" + os.Getenv("NLP_PORT") + "/convert"
-	client := &http.Client{Timeout: 600 * time.Second}
+	client := &http.Client{Timeout: 1200 * time.Second}
 
 	// POSTリクエストを送信
 	httpResp, err := client.Post(requestUrl, "application/json", bytes.NewBuffer(jsonData))
