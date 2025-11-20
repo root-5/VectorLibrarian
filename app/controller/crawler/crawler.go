@@ -17,7 +17,7 @@ func Start() (err error) {
 	allowedPaths := []string{
 		"/", // すべてのパスを許可する場合は "/" のみ指定
 	}
-	maxScrapeDepth := 7
+	maxScrapeDepth := 15
 
 	// キャッシュ無効化、ログ出力強化
 	isTest := false
