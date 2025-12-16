@@ -23,6 +23,7 @@ go.work.sum
 
 /app/cache/
 /app/tmp/
+/app/env/*.env
 
 /db/data/*
 /db/backup/*
